@@ -1,0 +1,17 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls",
+      "delegate_permission/common.get_login_creds"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "zahi.techpartners.asia",
+      "sha256_cert_fingerprints": [
+        "CD:11:B3:EE:ED:C3:B6:25:C0:3D:91:19:5A:8E:3D:ED:7C:0A:8B:A4:21:D0:8A:6C:A9:17:13:0D:64:38:92:4F",
+        "55:61:D0:86:EA:1C:37:69:24:A0:65:BA:63:96:9C:62:7B:B9:64:A3:C1:98:B0:D8:93:AA:C1:F9:34:40:83:29",
+        "C5:59:0E:88:BD:6E:CA:80:FE:E5:91:04:FF:65:34:AB:2A:42:11:14:A4:23:E5:8E:68:CE:41:BA:63:AF:7E:02"
+      ]
+    }
+  }
+]
