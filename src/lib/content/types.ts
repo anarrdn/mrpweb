@@ -106,6 +106,24 @@ export interface PageContent {
     phone: string;
     address: string;
   };
+  survey: {
+    [key: string]: {
+      title: string;
+      description: string;
+      image: string | null;
+      pdf: string | null;
+      link: string | null;
+    };
+  };
+  contract: {
+    [key: string]: {
+      title: string;
+      description: string;
+      image: string | null;
+      pdf: string | null;
+      link: string | null;
+    };
+  };
 }
 
 export type Content = PageContent;

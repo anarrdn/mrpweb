@@ -1,95 +1,90 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { LawSectionProps } from "./types";
-import { EditButton } from "@/components/ui/edit-button";
-import { useAuth } from "@/lib/auth/auth.context";
 import { useContent } from "@/lib/content/content.context";
+import { EditButton } from "@/components/ui/edit-button";
 import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
+import { Button } from "@/components/ui/button";
+import { LawItem } from "@/lib/content/types";
 
-export const LawSection = ({ lawItem }: LawSectionProps) => {
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const { isAuthenticated } = useAuth();
+interface LawSectionProps {
+  lawItem: LawItem;
+}
+
+export function LawSection({ lawItem }: LawSectionProps) {
   const { updateLawSection } = useContent();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  const handlePdfDownload = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (lawItem.pdfUrl) {
-      // If it's a base64 string (from file upload), create a download link
-      if (lawItem.pdfUrl.startsWith("data:application/pdf;base64,")) {
-        const link = document.createElement("a");
-        link.href = lawItem.pdfUrl;
-        link.download = `${lawItem.title}.pdf`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-      } else {
-        // If it's a URL, open in new tab
-        window.open(lawItem.pdfUrl, "_blank");
-      }
-    }
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  const handleSave = async (updatedData: Partial<LawItem>) => {
+    await updateLawSection(lawItem.id, updatedData);
+    setIsEditModalOpen(false);
   };
 
+  if (!mounted) {
+    return null;
+  }
+
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="max-w-2xl w-full p-8 bg-white rounded-lg shadow-lg relative">
-        {isAuthenticated && (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-2xl w-full space-y-8">
+        <div className="relative">
+          {lawItem.imageUrl && (
+            <div className="relative w-full aspect-[16/9] mb-6 rounded-lg overflow-hidden">
+              <Image
+                src={lawItem.imageUrl}
+                alt={lawItem.title}
+                fill
+                className="object-cover"
+                priority
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              />
+            </div>
+          )}
           <div className="absolute top-4 right-4">
             <EditButton onClick={() => setIsEditModalOpen(true)} />
           </div>
-        )}
-        <div className="relative h-64 mb-6 rounded-lg overflow-hidden">
-          <Image
-            src={lawItem.imageUrl}
-            alt={lawItem.title}
-            fill
-            className="object-cover"
-            priority
-          />
         </div>
+
         <h1 className="text-3xl font-bold text-gray-900 mb-4">
           {lawItem.title}
         </h1>
-        <p className="text-gray-600 mb-6">{lawItem.description}</p>
-        <div className="flex space-x-4">
+        <p className="text-lg text-gray-600 mb-8">{lawItem.description}</p>
+
+        <div className="flex flex-col sm:flex-row gap-4">
           {lawItem.websiteLink && (
-            <a
-              href={lawItem.websiteLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            <Button
+              variant="default"
+              className="w-full sm:w-auto"
+              onClick={() => window.open(lawItem.websiteLink, "_blank")}
             >
-              Холбоосруу Шилжих
-            </a>
+              Вэбсайт руу очих
+            </Button>
           )}
           {lawItem.pdfUrl && (
-            <button
-              onClick={handlePdfDownload}
-              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-gray-600 hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={() => window.open(lawItem.pdfUrl, "_blank")}
             >
-              PDF Татах
-            </button>
+              PDF файл үзэх
+            </Button>
           )}
         </div>
-      </div>
-      {isAuthenticated && (
+
         <DynamicEditModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           title="Edit Law"
-          initialData={{
-            title: lawItem.title,
-            description: lawItem.description,
-            websiteLink: lawItem.websiteLink,
-            imageUrl: lawItem.imageUrl,
-            pdfUrl: lawItem.pdfUrl,
-          }}
-          onSave={(updatedData) => {
-            updateLawSection(lawItem.id, updatedData);
-          }}
+          initialData={lawItem}
+          onSave={handleSave}
         />
-      )}
+      </div>
     </div>
   );
-};
+}

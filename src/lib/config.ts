@@ -23,16 +23,4 @@ export const MENU = [
     label: "Гэрээт байгууллага",
     href: "contract",
   },
-  {
-    label: "Хугацаат тайлан",
-    href: "report",
-  },
-  {
-    label: "Зар мэдээ",
-    href: "announcements",
-  },
-  {
-    label: "Шилэн Данс",
-    href: "account",
-  },
 ];

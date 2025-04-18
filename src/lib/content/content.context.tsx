@@ -198,6 +198,73 @@ const initialContent: PageContent = {
     phone: "",
     address: "",
   },
+  survey: {
+    create: {
+      title: "Хууль эрх зүй",
+      description: "Хууль эрх зүйн судалгаа, санал асуулга",
+      image: null,
+      pdf: null,
+      link: null,
+    },
+    manage: {
+      title: "Монгол улсын стандарт",
+      description: "Монгол улсын стандартын судалгаа, санал асуулга",
+      image: null,
+      pdf: null,
+      link: null,
+    },
+    participate: {
+      title: "Судалгаанд оролцох",
+      description: "Судалгаанд оролцох мэдээлэл",
+      image: null,
+      pdf: null,
+      link: null,
+    },
+    feedback: {
+      title: "Саналаа өгөх",
+      description: "Санал хүсэлт өгөх",
+      image: null,
+      pdf: null,
+      link: null,
+    },
+  },
+  contract: {
+    create: {
+      title: "Эмийн сан",
+      description: "Эмийн сангийн гэрээт байгууллага",
+      image: null,
+      pdf: null,
+      link: null,
+    },
+    manage: {
+      title: "Ажлын хувцасны үйлдвэр ба дэлгүүр",
+      description: "Ажлын хувцасны үйлдвэр ба дэлгүүрийн гэрээт байгууллага",
+      image: null,
+      pdf: null,
+      link: null,
+    },
+    equipment: {
+      title: "Ажлын байрны тоног төхөөрөмж, тавилга",
+      description: "Ажлын байрны тоног төхөөрөмж, тавилгын гэрээт байгууллага",
+      image: null,
+      pdf: null,
+      link: null,
+    },
+    finance: {
+      title: "Санхүүгийн үйлчилгээ үзүүлэх байгууллагууд",
+      description: "Санхүүгийн үйлчилгээ үзүүлэх гэрээт байгууллагууд",
+      image: null,
+      pdf: null,
+      link: null,
+    },
+    register: {
+      title: "Анхан шатны бүртгэл",
+      description: "Анхан шатны бүртгэлийн гэрээт байгууллага",
+      image: null,
+      pdf: null,
+      link: null,
+    },
+  },
 };
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
@@ -248,31 +315,23 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (typeof window !== "undefined") {
       try {
-        // Load content in chunks
         const savedContent = localStorage.getItem(STORAGE_KEYS.CONTENT);
-        const savedLaws = localStorage.getItem(STORAGE_KEYS.LAWS);
-        const savedNews = localStorage.getItem(STORAGE_KEYS.NEWS);
-
-        if (savedContent || savedLaws || savedNews) {
-          const parsedContent = savedContent ? JSON.parse(savedContent) : {};
-          const parsedLaws = savedLaws ? JSON.parse(savedLaws) : [];
-          const parsedNews = savedNews ? JSON.parse(savedNews) : {};
-
-          setContent({
+        if (savedContent) {
+          const parsedContent = JSON.parse(savedContent);
+          // Ensure all required fields are present
+          const mergedContent = {
             ...initialContent,
             ...parsedContent,
-            laws: parsedLaws.length ? parsedLaws : initialContent.laws,
-            news: Object.keys(parsedNews).length
-              ? parsedNews
-              : initialContent.news,
-          });
+            laws: parsedContent.laws || initialContent.laws,
+            news: parsedContent.news || initialContent.news,
+            links: parsedContent.links || initialContent.links,
+          };
+          setContent(mergedContent);
         }
       } catch (error) {
         console.error("Error loading content:", error);
-        // Clear corrupted data
-        localStorage.removeItem(STORAGE_KEYS.CONTENT);
-        localStorage.removeItem(STORAGE_KEYS.LAWS);
-        localStorage.removeItem(STORAGE_KEYS.NEWS);
+        // If there's an error, ensure we have the initial content
+        setContent(initialContent);
       }
     }
     setIsLoading(false);
@@ -285,37 +344,15 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     setContent((prev) => {
       const newContent = { ...prev, [section]: data };
 
+      // Save to localStorage immediately
       if (typeof window !== "undefined") {
         try {
-          // Clean and split content for storage
-          const cleanContent = cleanBase64Data(newContent);
-
-          // Store content in chunks
-          const { laws, news, ...otherContent } = cleanContent;
-
-          // Check storage size before saving
-          const contentSize = estimateStorageSize(otherContent);
-          const lawsSize = estimateStorageSize(laws);
-          const newsSize = estimateStorageSize(news);
-
-          if (contentSize < MAX_STORAGE_SIZE) {
-            localStorage.setItem(
-              STORAGE_KEYS.CONTENT,
-              JSON.stringify(otherContent)
-            );
-          }
-
-          if (lawsSize < MAX_STORAGE_SIZE) {
-            localStorage.setItem(STORAGE_KEYS.LAWS, JSON.stringify(laws));
-          }
-
-          if (newsSize < MAX_STORAGE_SIZE) {
-            localStorage.setItem(STORAGE_KEYS.NEWS, JSON.stringify(news));
-          }
+          localStorage.setItem(
+            STORAGE_KEYS.CONTENT,
+            JSON.stringify(newContent)
+          );
         } catch (error) {
           console.error("Error saving content:", error);
-          // Clear storage if it's full
-          localStorage.clear();
         }
       }
 
@@ -325,29 +362,22 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const updateLawSection = (lawId: string, data: Partial<LawItem>) => {
     setContent((prev) => {
-      const updatedLaws = prev.laws.map((law) =>
+      // Ensure laws array exists
+      const currentLaws = prev.laws || [];
+      const updatedLaws = currentLaws.map((law) =>
         law.id === lawId ? { ...law, ...data } : law
       );
+      const newContent = { ...prev, laws: updatedLaws };
 
-      const newContent = {
-        ...prev,
-        laws: updatedLaws,
-      };
-
+      // Save to localStorage immediately
       if (typeof window !== "undefined") {
         try {
-          // Clean and store law data separately
-          const cleanLawData = cleanBase64Data(data);
-          localStorage.setItem(`law_${lawId}`, JSON.stringify(cleanLawData));
-
-          // Update laws collection
-          const cleanLaws = cleanBase64Data(updatedLaws);
-          if (estimateStorageSize(cleanLaws) < MAX_STORAGE_SIZE) {
-            localStorage.setItem(STORAGE_KEYS.LAWS, JSON.stringify(cleanLaws));
-          }
+          localStorage.setItem(
+            STORAGE_KEYS.CONTENT,
+            JSON.stringify(newContent)
+          );
         } catch (error) {
           console.error("Error saving law data:", error);
-          localStorage.removeItem(`law_${lawId}`);
         }
       }
 
@@ -356,17 +386,9 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   };
 
   const getLawSection = (lawId: string): LawItem | undefined => {
-    if (typeof window !== "undefined") {
-      const savedLaw = localStorage.getItem(`law_${lawId}`);
-      if (savedLaw) {
-        try {
-          return JSON.parse(savedLaw);
-        } catch (error) {
-          console.error(`Error parsing saved law ${lawId}:`, error);
-        }
-      }
-    }
-    return content.laws.find((law) => law.id === lawId);
+    // Ensure laws array exists
+    const currentLaws = content.laws || [];
+    return currentLaws.find((law) => law.id === lawId);
   };
 
   const saveChanges = async (): Promise<SaveResult> => {
