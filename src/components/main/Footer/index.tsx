@@ -1,90 +1,62 @@
-import { MENU } from "@/lib/config";
+"use client";
+
+import { useContent } from "@/lib/content/content.context";
 import Image from "next/image";
-import Link from "next/link";
-import Logo from "../Logo";
+import { FaPhone, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
 
 const Footer = () => {
+  const { content } = useContent();
+  const mapImageUrl = content.footer.mapImage; // Get the uploaded image URL/base64
+
   return (
-    <footer className="py-16 relative text-white mt-auto">
-      <div className="w-full h-full absolute top-0 right-0 -z-[1]">
-        <Image
-          src="/images/footer_bg-min.webp"
-          alt="footer"
-          fill
-          className="object-cover"
-        />
-      </div>
-      <div className="container mx-auto px-4 ">
-        <div className="flex justify-between items-center gap-16 md:flex-row flex-col">
-          <div className="flex flex-col gap-4 text-center md:text-left">
-            <Logo dark={false} />
-            <Link href="mailto:marketing@zahii.mn">
-              <div className="flex items-center gap-2">
-                <Image
-                  src="/images/mail-min.webp"
-                  height={24}
-                  width={24}
-                  alt="mail"
-                />
-                <p>marketing@zahii.mn</p>
-              </div>
-            </Link>
-            <Link href="tel:75882288">
-              <div className="flex items-center gap-2">
-                <Image
-                  src="/images/phone-min.webp"
-                  height={24}
-                  width={24}
-                  alt="phone"
-                />
-                <p>7588 2288</p>
-              </div>
-            </Link>
+    <footer className="bg-gray-900 text-white">
+      <div className="container mx-auto px-4 py-12">
+        {/* Contact Info */}
+        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 mb-8">
+          <div className="flex items-center gap-2">
+            <FaPhone className="w-5 h-5 text-gray-400" />
+            <p className="text-gray-400">{content.footer.phone1}</p>
           </div>
-          <div className="flex items-center gap-8">
-            {MENU.map((item) => (
-              <Link
-                href={`#${item.href}`}
-                key={item.href}
-                className="hover:scale-105 transition-all duration-150"
-              >
-                <p className="text-white">{item.label}</p>
-              </Link>
-            ))}
+          {content.footer.phone2 && (
+            <div className="flex items-center gap-2">
+              <FaPhone className="w-5 h-5 text-gray-400" />
+              <p className="text-gray-400">{content.footer.phone2}</p>
+            </div>
+          )}
+          <div className="flex items-center gap-2">
+            <FaEnvelope className="w-5 h-5 text-gray-400" />
+            <p className="text-gray-400">{content.footer.email}</p>
           </div>
-          <div className="flex items-center gap-4">
-            <Link
-              href="https://www.facebook.com/ZahiiApp"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Image
-                src="/images/Facebook-min.webp"
-                alt="facebook"
-                width={30}
-                height={30}
-                className="hover:scale-105 transition-all duration-150"
-              />
-            </Link>
-            <Link
-              href="https://www.instagram.com/zahii_app/"
-              target="_blank"
-              rel="noreferrer"
-            >
-              <Image
-                src="/images/Instagram-min.webp"
-                alt="instagram"
-                width={30}
-                height={30}
-                className="hover:scale-105 transition-all duration-150"
-              />
-            </Link>
+          <div className="flex items-center gap-2">
+            <FaMapMarkerAlt className="w-5 h-5 text-gray-400" />
+            <p className="text-gray-400">{content.footer.address}</p>
           </div>
         </div>
-        <div className="mt-16 mb-8 w-full border-t border-t-white" />
-        <div className="text-center">
-          <p className="">
-            {new Date().getFullYear()} Techpartners All rights reserved.
+
+        {/* Map Image Section */}
+        <div className="mt-8">
+          <div className="relative w-full h-[300px] rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center">
+            {mapImageUrl ? (
+              <Image
+                src={mapImageUrl}
+                alt={`Map location: ${content.footer.address}`}
+                fill // Use fill combined with object-contain/cover
+                className="object-cover" // Change to object-cover to fill the container
+                priority // Load image eagerly if it's important
+              />
+            ) : (
+              <p className="text-gray-500 text-center px-4">
+                No map image uploaded.
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Copyright */}
+        <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
+          <p>
+            &copy; {new Date().getFullYear()} {content.footer.title}. Бүх эрх
+            хуулиар хамгаалагдсан.
           </p>
         </div>
       </div>

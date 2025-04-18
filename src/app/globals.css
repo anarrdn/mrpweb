@@ -2,12 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --scrollbar-width: calc(100vw - 100%);
+}
+
+html {
+  margin-right: calc(var(--scrollbar-width));
+  overflow-y: scroll;
+}
+
 body {
+  width: 100vw;
+  overflow-x: hidden;
   font-family: var(--font-gip-sans);
 }
 
-html{
-  scroll-behavior: smooth;
+/* Style the scrollbar to be less obtrusive */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
 }
 
 @layer base {
@@ -38,7 +65,6 @@ html{
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
   }
-  
 }
 
 @layer base {

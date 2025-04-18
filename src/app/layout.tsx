@@ -1,50 +1,12 @@
 import Footer from "@/components/main/Footer";
 import Header from "@/components/main/Header";
 import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "./globals.css";
+import { AuthProvider } from "@/lib/auth/auth.context";
+import { ContentProvider } from "@/lib/content/content.context";
+import { Inter } from "next/font/google";
 
-const gipSans = localFont({
-  src: [
-    {
-      path: "./fonts/GIP-Thin.otf",
-      weight: "100",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GIP-Light.otf",
-      weight: "300",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GIP-Regular.otf",
-      weight: "400",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GIP-Medium.otf",
-      weight: "500",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GIP-SemiBold.otf",
-      weight: "600",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GIP-Bold.otf",
-      weight: "700",
-      style: "normal",
-    },
-    {
-      path: "./fonts/GIP-ExtraBold.otf",
-      weight: "800",
-      style: "normal",
-    },
-  ],
-  variable: "--font-gip-sans",
-  weight: "100 900",
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Zahii",
@@ -57,7 +19,6 @@ export const metadata: Metadata = {
     siteName: "Zahii",
   },
   robots: { index: true, follow: true },
-
   keywords: [
     "zahii",
     "zahii app",
@@ -114,11 +75,15 @@ export default function RootLayout({
         <link rel="manifest" href="/site.webmanifest" />
       </head>
       <body
-        className={`${gipSans.variable} antialiased relative overflow-x-hidden bg-[#F1F1F1] min-h-screen flex flex-col`}
+        className={`antialiased relative bg-[#F1F1F1] min-h-screen flex flex-col ${inter.className}`}
       >
-        <Header />
-        <main className="flex-1 min-h-[calc(100vh-4rem)]">{children}</main>
-        <Footer />
+        <AuthProvider>
+          <ContentProvider>
+            <Header />
+            <main className="flex-1 min-h-[calc(100vh-4rem)]">{children}</main>
+            <Footer />
+          </ContentProvider>
+        </AuthProvider>
       </body>
     </html>
   );

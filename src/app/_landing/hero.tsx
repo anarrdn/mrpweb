@@ -1,0 +1,48 @@
+"use client";
+
+import { useContent } from "@/lib/content/content.context";
+import { EditableSection } from "@/components/ui/editable-section";
+import Image from "next/image";
+
+export default function Hero() {
+  return (
+    <EditableSection section="hero">
+      {(content) => (
+        <section className="relative min-h-screen flex items-center justify-center">
+          <div className="absolute inset-0 z-0">
+            {content.backgroundImage &&
+              typeof content.backgroundImage === "string" &&
+              content.backgroundImage.trim() !== "" && (
+                <Image
+                  src={content.backgroundImage}
+                  alt="Background"
+                  fill
+                  className="object-cover"
+                />
+              )}
+            <div className="absolute inset-0 bg-black/50" />
+          </div>
+
+          <div className="container mx-auto px-4 relative z-10 text-center text-white">
+            <h1 className="text-4xl md:text-6xl font-bold mb-4">
+              {content.title}
+            </h1>
+            <p className="text-xl md:text-2xl mb-8">{content.subtitle}</p>
+          </div>
+        </section>
+      )}
+    </EditableSection>
+  );
+}
+
+// export const Hero = async  ()=> {
+
+//     const data = await Hero.info()
+
+//     return (
+//         <div>
+//             {data.title}
+//             {data.sub_title}
+//         </div>
+//     )
+// }
