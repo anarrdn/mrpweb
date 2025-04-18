@@ -1,22 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { LawSectionProps } from "./types";
-import { LawEditModal } from "./LawEditModal";
 import { EditButton } from "@/components/ui/edit-button";
 import { useAuth } from "@/lib/auth/auth.context";
 import { useContent } from "@/lib/content/content.context";
+import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
 
 export const LawSection = ({ lawItem }: LawSectionProps) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
   const { isAuthenticated } = useAuth();
   const { updateLawSection } = useContent();
-
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
 
   const handlePdfDownload = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -39,7 +34,7 @@ export const LawSection = ({ lawItem }: LawSectionProps) => {
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
       <div className="max-w-2xl w-full p-8 bg-white rounded-lg shadow-lg relative">
-        {isClient && isAuthenticated && (
+        {isAuthenticated && (
           <div className="absolute top-4 right-4">
             <EditButton onClick={() => setIsEditModalOpen(true)} />
           </div>
@@ -78,12 +73,18 @@ export const LawSection = ({ lawItem }: LawSectionProps) => {
           )}
         </div>
       </div>
-      {isClient && isAuthenticated && (
-        <LawEditModal
+      {isAuthenticated && (
+        <DynamicEditModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
-          lawId={lawItem.id}
-          initialData={lawItem}
+          title="Edit Law"
+          initialData={{
+            title: lawItem.title,
+            description: lawItem.description,
+            websiteLink: lawItem.websiteLink,
+            imageUrl: lawItem.imageUrl,
+            pdfUrl: lawItem.pdfUrl,
+          }}
           onSave={(updatedData) => {
             updateLawSection(lawItem.id, updatedData);
           }}
