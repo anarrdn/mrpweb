@@ -86,26 +86,6 @@ export interface PageContent {
     description: string;
     image: string | null;
   };
-  about: {
-    title: string;
-    description: string;
-    image: string | null;
-  };
-  services: {
-    title: string;
-    items: Array<{
-      title: string;
-      description: string;
-      icon: string;
-    }>;
-  };
-  contact: {
-    title: string;
-    description: string;
-    email: string;
-    phone: string;
-    address: string;
-  };
   survey: {
     [key: string]: {
       title: string;

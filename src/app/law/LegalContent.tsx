@@ -31,12 +31,17 @@ export default function LegalContent() {
   ];
 
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <h2 className="text-3xl font-bold text-center mb-8">Хууль эрх зүй</h2>
+    <section className="py-24 bg-white pt-32 scroll-mt-32">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            Хууль эрх зүй
+          </h2>
+          <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
+        </div>
 
         {/* Category Navigation */}
-        <div className="mb-8">
+        <div className="mb-12">
           <div className="flex flex-wrap justify-center gap-4">
             {categories.map((category) => (
               <button
@@ -44,8 +49,8 @@ export default function LegalContent() {
                 onClick={() => setSelectedCategory(category.id)}
                 className={`px-6 py-2 rounded-full text-sm font-medium transition-colors ${
                   selectedCategory === category.id
-                    ? "bg-indigo-600 text-white"
-                    : "bg-white text-gray-700 hover:bg-gray-100"
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                 }`}
               >
                 {category.label}
@@ -55,15 +60,15 @@ export default function LegalContent() {
         </div>
 
         {/* Content Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {Object.entries(lawItems)
             .filter(([id]) => !selectedCategory || id === selectedCategory)
             .map(([id, item]) => (
               <div
                 key={id}
-                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300"
+                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300"
               >
-                <div className="relative h-48">
+                <div className="relative h-64">
                   <Image
                     src={item.imageUrl}
                     alt={item.title}
@@ -73,18 +78,22 @@ export default function LegalContent() {
                 </div>
 
                 <div className="p-6">
-                  <h3 className="text-xl font-semibold mb-2">{item.title}</h3>
-                  <p className="text-gray-600 mb-4">{item.description}</p>
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900">
+                    {item.title}
+                  </h3>
+                  <p className="text-gray-600 mb-6 leading-relaxed">
+                    {item.description}
+                  </p>
 
-                  <div className="flex flex-col space-y-2">
+                  <div className="flex flex-col space-y-3">
                     <Link
                       href={item.websiteLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-indigo-600 hover:text-indigo-800 flex items-center"
+                      className="text-blue-600 hover:text-blue-800 flex items-center group"
                     >
                       <svg
-                        className="w-5 h-5 mr-2"
+                        className="w-5 h-5 mr-2 transition-transform group-hover:translate-x-1"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -103,10 +112,10 @@ export default function LegalContent() {
                       href={item.pdfUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-indigo-600 hover:text-indigo-800 flex items-center"
+                      className="text-blue-600 hover:text-blue-800 flex items-center group"
                     >
                       <svg
-                        className="w-5 h-5 mr-2"
+                        className="w-5 h-5 mr-2 transition-transform group-hover:translate-x-1"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"

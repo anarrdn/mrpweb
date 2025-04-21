@@ -12,14 +12,19 @@ export default function LawPage() {
 
   if (!lawItem) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900">Хууль олдсонгүй</h1>
-          <p className="mt-2 text-gray-600">
-            Уучлаарай, хайсан хууль олдсонгүй.
-          </p>
+      <section className="py-24 bg-white pt-40 scroll-mt-40">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center">
+            <h1 className="text-4xl font-bold text-gray-900 mb-4">
+              Хууль олдсонгүй
+            </h1>
+            <div className="w-24 h-1 bg-blue-600 mx-auto mb-8"></div>
+            <p className="text-lg text-gray-600">
+              Уучлаарай, хайсан хууль олдсонгүй.
+            </p>
+          </div>
         </div>
-      </div>
+      </section>
     );
   }
 

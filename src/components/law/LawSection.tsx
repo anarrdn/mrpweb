@@ -31,50 +31,58 @@ export function LawSection({ lawItem }: LawSectionProps) {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-2xl w-full space-y-8">
-        <div className="relative">
-          {lawItem.imageUrl && (
-            <div className="relative w-full aspect-[16/9] mb-6 rounded-lg overflow-hidden">
-              <Image
-                src={lawItem.imageUrl}
-                alt={lawItem.title}
-                fill
-                className="object-cover"
-                priority
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              />
-            </div>
-          )}
-          <div className="absolute top-4 right-4">
-            <EditButton onClick={() => setIsEditModalOpen(true)} />
-          </div>
+    <section className="py-24 bg-white pt-40 scroll-mt-40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            {lawItem.title}
+          </h1>
+          <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
         </div>
 
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          {lawItem.title}
-        </h1>
-        <p className="text-lg text-gray-600 mb-8">{lawItem.description}</p>
+        <div className="max-w-3xl mx-auto">
+          <div className="relative">
+            {lawItem.imageUrl && (
+              <div className="relative w-full aspect-[16/9] mb-8 rounded-2xl overflow-hidden shadow-lg">
+                <Image
+                  src={lawItem.imageUrl}
+                  alt={lawItem.title}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              </div>
+            )}
+            <div className="absolute top-4 right-4">
+              <EditButton onClick={() => setIsEditModalOpen(true)} />
+            </div>
+          </div>
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          {lawItem.websiteLink && (
-            <Button
-              variant="default"
-              className="w-full sm:w-auto"
-              onClick={() => window.open(lawItem.websiteLink, "_blank")}
-            >
-              Вэбсайт руу очих
-            </Button>
-          )}
-          {lawItem.pdfUrl && (
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto"
-              onClick={() => window.open(lawItem.pdfUrl, "_blank")}
-            >
-              PDF файл үзэх
-            </Button>
-          )}
+          <p className="text-lg text-gray-600 leading-relaxed mb-12">
+            {lawItem.description}
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {lawItem.websiteLink && (
+              <Button
+                variant="default"
+                className="w-full sm:w-auto px-6 py-3 text-lg"
+                onClick={() => window.open(lawItem.websiteLink, "_blank")}
+              >
+                Вэбсайт руу очих
+              </Button>
+            )}
+            {lawItem.pdfUrl && (
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto px-6 py-3 text-lg"
+                onClick={() => window.open(lawItem.pdfUrl, "_blank")}
+              >
+                PDF файл үзэх
+              </Button>
+            )}
+          </div>
         </div>
 
         <DynamicEditModal
@@ -85,6 +93,6 @@ export function LawSection({ lawItem }: LawSectionProps) {
           onSave={handleSave}
         />
       </div>
-    </div>
+    </section>
   );
 }

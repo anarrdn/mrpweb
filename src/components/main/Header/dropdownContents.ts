@@ -17,6 +17,7 @@ export const DROPDOWN_ITEMS = {
   "Мэдээ мэдээлэл": [
     { label: "Хяналт шалгалтын мэдээлэл", href: "/news/inspection" },
     { label: "Тайлангийн маягтууд", href: "/news/report-forms" },
+    { label: "Видео мэдээ", href: "/news/video-news" },
     { label: "Гадаад хамтын ажиллагаа", href: "/news/cooperation" },
     { label: "Судалгаа", href: "/news/research" },
     { label: "Цаг үеийн мэдээлэл", href: "/news/current" },

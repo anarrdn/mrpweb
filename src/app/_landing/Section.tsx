@@ -37,9 +37,11 @@ const Section = ({
     <section className="py-16">
       <div className="container mx-auto px-4">
         <div
-          className={`grid grid-cols-1 md:grid-cols-2 gap-8 items-center ${
-            reverse ? "md:flex-row-reverse" : ""
-          }`}
+          className={`grid ${
+            image
+              ? "grid-cols-1 md:grid-cols-2"
+              : "grid-cols-1 max-w-3xl mx-auto"
+          } gap-8 items-center ${reverse ? "md:flex-row-reverse" : ""}`}
         >
           <div className={`space-y-4 ${textAlignmentClasses[titleAlignment]}`}>
             <h2 className="text-3xl font-bold">{title}</h2>

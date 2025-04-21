@@ -1,37 +1,36 @@
 "use client";
 
 import { useContent } from "@/lib/content/content.context";
-import { EditButton } from "@/components/ui/edit-button";
-import { EditModal } from "@/components/ui/edit-modal";
 import Image from "next/image";
-import { useState } from "react";
 
 export default function Goal() {
   const { content } = useContent();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  // Default values if content is not loaded yet
-  const goalContent = content?.goal || {
-    title: "Our Goal",
-    description: "Loading...",
-    image: null,
-  };
 
   return (
-    <section id="goal" className="pt-40 pb-16 bg-white">
-      <EditButton onClick={() => setIsEditModalOpen(true)} />
+    <section id="goal" className="py-24 bg-white pt-32 scroll-mt-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">
+            {content.goal.title}
+          </h2>
+          <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
+        </div>
+        <div
+          className={`grid ${
+            content.goal.image
+              ? "grid-cols-1 md:grid-cols-2"
+              : "grid-cols-1 max-w-3xl mx-auto"
+          } gap-16 items-center`}
+        >
           <div className="space-y-6">
-            <h2 className="text-3xl font-bold text-gray-900 sm:text-4xl">
-              {goalContent.title}
-            </h2>
-            <p className="text-lg text-gray-600">{goalContent.description}</p>
+            <p className="text-gray-600 leading-relaxed text-lg">
+              {content.goal.description}
+            </p>
           </div>
-          {goalContent.image && (
-            <div className="relative h-[400px] rounded-lg overflow-hidden">
+          {content.goal.image && (
+            <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-xl">
               <Image
-                src={goalContent.image}
+                src={content.goal.image}
                 alt="Goal"
                 fill
                 className="object-cover"
@@ -40,12 +39,6 @@ export default function Goal() {
           )}
         </div>
       </div>
-      <EditModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        section="goal"
-        initialData={goalContent}
-      />
     </section>
   );
 }

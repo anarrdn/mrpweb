@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 
 interface DropdownProps {
   label: string;
@@ -17,6 +18,7 @@ interface DropdownProps {
 
 const Dropdown = ({ label, items }: DropdownProps) => {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
 
   const handleScroll = (
     e: React.MouseEvent<HTMLAnchorElement>,
@@ -24,10 +26,16 @@ const Dropdown = ({ label, items }: DropdownProps) => {
   ) => {
     e.preventDefault();
     if (href.startsWith("#")) {
-      const id = href.replace("#", "");
-      const element = document.getElementById(id);
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth" });
+      // If we're not on the main page, navigate to main page first
+      if (pathname !== "/") {
+        window.location.href = `/${href}`;
+      } else {
+        // If we're already on the main page, just scroll to the section
+        const id = href.replace("#", "");
+        const element = document.getElementById(id);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
       }
     } else {
       window.location.href = href;

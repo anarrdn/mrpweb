@@ -32,70 +32,88 @@ export default function LinksPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="max-w-2xl w-full p-8 bg-white rounded-lg shadow-lg relative">
-        <EditButton onClick={() => setIsEditModalOpen(true)} />
-        <div className="space-y-6">
-          <h1 className="text-3xl font-bold text-gray-900">
+    <section className="py-24 bg-white pt-40 scroll-mt-40">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-16">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
             {linkContent.title}
           </h1>
-          {linkContent.image && (
-            <div className="relative h-64 rounded-lg overflow-hidden">
-              <Image
-                src={linkContent.image}
-                alt={linkContent.title}
-                fill
-                className="object-cover"
-              />
+          <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
+        </div>
+
+        <div className="max-w-3xl mx-auto">
+          <div className="relative">
+            {linkContent.image && (
+              <div className="relative w-full aspect-[16/9] mb-8 rounded-2xl overflow-hidden shadow-lg">
+                <Image
+                  src={linkContent.image}
+                  alt={linkContent.title}
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                />
+              </div>
+            )}
+            <div className="absolute top-4 right-4">
+              <EditButton onClick={() => setIsEditModalOpen(true)} />
             </div>
-          )}
-          <div className="prose max-w-none">
-            <p className="text-gray-600 whitespace-pre-line">
+          </div>
+
+          <div className="prose max-w-none mb-12">
+            <p className="text-lg text-gray-600 leading-relaxed whitespace-pre-line">
               {linkContent.description}
             </p>
           </div>
-          {linkContent.websiteLink && (
-            <Button
-              variant="outline"
-              onClick={() => window.open(linkContent.websiteLink, "_blank")}
-            >
-              Visit Website
-            </Button>
-          )}
-          {linkContent.pdfUrl && (
-            <Button
-              variant="outline"
-              onClick={() => window.open(linkContent.pdfUrl, "_blank")}
-            >
-              View PDF
-            </Button>
-          )}
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            {linkContent.websiteLink && (
+              <Button
+                variant="default"
+                className="w-full sm:w-auto px-6 py-3 text-lg"
+                onClick={() => window.open(linkContent.websiteLink, "_blank")}
+              >
+                Вэбсайт руу очих
+              </Button>
+            )}
+            {linkContent.pdfUrl && (
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto px-6 py-3 text-lg"
+                onClick={() => window.open(linkContent.pdfUrl, "_blank")}
+              >
+                PDF файл үзэх
+              </Button>
+            )}
+          </div>
         </div>
+
+        <DynamicEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          title="Edit Link"
+          initialData={{
+            title: linkContent.title,
+            description: linkContent.description,
+            image: linkContent.image,
+            websiteLink: linkContent.websiteLink,
+            pdfUrl: linkContent.pdfUrl,
+          }}
+          onSave={(updatedData) => {
+            updateContent("links", {
+              ...content.links,
+              [params.section]: {
+                title: updatedData.title,
+                description: updatedData.description,
+                image: updatedData.image,
+                websiteLink: updatedData.websiteLink,
+                pdfUrl: updatedData.pdfUrl,
+              },
+            });
+            setIsEditModalOpen(false);
+          }}
+        />
       </div>
-      <DynamicEditModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        title="Edit Link"
-        initialData={{
-          title: linkContent.title,
-          description: linkContent.description,
-          image: linkContent.image,
-          websiteLink: linkContent.websiteLink,
-          pdfUrl: linkContent.pdfUrl,
-        }}
-        onSave={(updatedData) => {
-          updateContent("links", {
-            ...content.links,
-            [params.section]: {
-              title: updatedData.title,
-              description: updatedData.description,
-              image: updatedData.image,
-              websiteLink: updatedData.websiteLink,
-              pdfUrl: updatedData.pdfUrl,
-            },
-          });
-        }}
-      />
-    </div>
+    </section>
   );
 }

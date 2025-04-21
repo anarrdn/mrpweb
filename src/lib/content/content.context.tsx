@@ -150,8 +150,8 @@ const defaultGreeting: GreetingContent = {
 };
 
 const defaultHero: HeroContent = {
-  title: "Welcome to Medtech",
-  subtitle: "Your trusted healthcare partner",
+  title: "монголын эм хангамжийн шинэчлэл холбоо",
+  subtitle: "",
   backgroundImage: null,
 };
 
@@ -167,7 +167,7 @@ const defaultStructure: StructureContent = {
   image: "",
 };
 
-const initialContent: PageContent = {
+const initialContent: Content = {
   footer: defaultFooter,
   laws: initialLawItems,
   mission: defaultMission,
@@ -178,25 +178,9 @@ const initialContent: PageContent = {
   news: {},
   links: initialLinks,
   goal: {
-    title: "Our Goal",
+    title: "Эрхэм зорилго, зорилт",
     description: "Loading...",
     image: null,
-  },
-  about: {
-    title: "About Us",
-    description: "Loading...",
-    image: null,
-  },
-  services: {
-    title: "Our Services",
-    items: [],
-  },
-  contact: {
-    title: "Contact Us",
-    description: "Loading...",
-    email: "",
-    phone: "",
-    address: "",
   },
   survey: {
     create: {
@@ -276,35 +260,32 @@ const STORAGE_KEYS = {
   SETTINGS: "settings",
 };
 
-const MAX_STORAGE_SIZE = 2 * 1024 * 1024; // 2MB limit
-
-function isBase64(str: string) {
-  return str.startsWith("data:");
+// Function to check if a string is a base64 image
+function isBase64Image(str: string) {
+  return str.startsWith("data:image");
 }
 
-function cleanBase64Data(data: any): any {
+// Function to clean data before storage
+function cleanDataForStorage(data: any): any {
   if (typeof data !== "object" || data === null) {
     return data;
   }
 
   if (Array.isArray(data)) {
-    return data.map(cleanBase64Data);
+    return data.map(cleanDataForStorage);
   }
 
   return Object.entries(data).reduce((acc, [key, value]) => {
-    if (typeof value === "string" && isBase64(value)) {
-      acc[key] = "";
+    if (typeof value === "string" && isBase64Image(value)) {
+      // For base64 images, store a placeholder
+      acc[key] = "image_placeholder";
     } else if (typeof value === "object" && value !== null) {
-      acc[key] = cleanBase64Data(value);
+      acc[key] = cleanDataForStorage(value);
     } else {
       acc[key] = value;
     }
     return acc;
   }, {} as Record<string, any>);
-}
-
-function estimateStorageSize(data: any): number {
-  return new Blob([JSON.stringify(data)]).size;
 }
 
 export function ContentProvider({ children }: { children: ReactNode }) {
@@ -318,19 +299,19 @@ export function ContentProvider({ children }: { children: ReactNode }) {
         const savedContent = localStorage.getItem(STORAGE_KEYS.CONTENT);
         if (savedContent) {
           const parsedContent = JSON.parse(savedContent);
-          // Ensure all required fields are present
+          // Merge with initial content, ensuring laws is always an array
           const mergedContent = {
             ...initialContent,
             ...parsedContent,
-            laws: parsedContent.laws || initialContent.laws,
-            news: parsedContent.news || initialContent.news,
-            links: parsedContent.links || initialContent.links,
+            laws:
+              Array.isArray(parsedContent.laws) && parsedContent.laws.length > 0
+                ? parsedContent.laws
+                : initialLawItems,
           };
           setContent(mergedContent);
         }
       } catch (error) {
         console.error("Error loading content:", error);
-        // If there's an error, ensure we have the initial content
         setContent(initialContent);
       }
     }
@@ -342,17 +323,25 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     data: Content[ContentSection]
   ) => {
     setContent((prev) => {
-      const newContent = { ...prev, [section]: data };
+      const newContent = {
+        ...prev,
+        [section]: data,
+        laws: section === "laws" && Array.isArray(data) ? data : prev.laws,
+      };
 
-      // Save to localStorage immediately
+      // Clean data before saving to localStorage
+      const cleanedContent = cleanDataForStorage(newContent);
+
+      // Save to localStorage
       if (typeof window !== "undefined") {
         try {
           localStorage.setItem(
             STORAGE_KEYS.CONTENT,
-            JSON.stringify(newContent)
+            JSON.stringify(cleanedContent)
           );
         } catch (error) {
           console.error("Error saving content:", error);
+          // If storage fails, at least keep the content in state
         }
       }
 
