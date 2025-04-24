@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { useAuth } from "@/lib/auth/auth.context";
 import { Button } from "@/components/ui/button";
-import { EditModal } from "@/components/ui/edit-modal";
+import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
 import { useState } from "react";
 
 export default function LinksPage() {
@@ -24,11 +24,11 @@ export default function LinksPage() {
     setIsEditModalOpen(true);
   };
 
-  const handleSave = async (updatedData: Link) => {
+  const handleSave = async (updatedData: Record<string, any>) => {
     if (editingLink) {
       await updateContent("links", {
         ...content.links,
-        [editingLink]: updatedData,
+        [editingLink]: updatedData as Link,
       });
       setIsEditModalOpen(false);
       setEditingLink(null);
@@ -81,14 +81,15 @@ export default function LinksPage() {
       </div>
 
       {isAuthenticated && editingLink && (
-        <EditModal
+        <DynamicEditModal
           isOpen={isEditModalOpen}
           onClose={() => {
             setIsEditModalOpen(false);
             setEditingLink(null);
           }}
-          section="links"
+          title="Edit Link"
           initialData={content.links[editingLink]}
+          onSave={handleSave}
         />
       )}
     </div>
