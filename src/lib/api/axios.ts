@@ -1,8 +1,9 @@
 import axios from "axios";
+import { config } from "../config";
 
 // Create axios instance with default config
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api",
+  baseURL: config.backendUrl,
   headers: {
     "Content-Type": "application/json",
   },
@@ -11,11 +12,10 @@ const api = axios.create({
 // Request interceptor for API calls
 api.interceptors.request.use(
   (config) => {
-    // You can add auth token here if needed
-    // const token = localStorage.getItem('token');
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`;
-    // }
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
     return config;
   },
   (error) => {
@@ -29,10 +29,8 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Handle specific error cases here
     if (error.response?.status === 401) {
-      // Handle unauthorized access
-      // You might want to redirect to login or refresh token
+      localStorage.removeItem("token");
     }
 
     return Promise.reject(error);

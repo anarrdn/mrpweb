@@ -53,10 +53,11 @@ export interface StructureContent {
 
 export interface NewsContent {
   title: string;
-  content: string;
+  description: string;
   image: string | null;
   pdf: string | null;
   link: string | null;
+  youtube: string | null;
 }
 
 export interface Link {
@@ -65,6 +66,7 @@ export interface Link {
   image?: string;
   websiteLink?: string;
   pdfUrl?: string;
+  youtube?: string;
 }
 
 export interface PageContent {
@@ -93,6 +95,7 @@ export interface PageContent {
       image: string | null;
       pdf: string | null;
       link: string | null;
+      youtube: string | null;
     };
   };
   contract: {
