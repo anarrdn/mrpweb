@@ -134,8 +134,62 @@ export function DynamicEditModal({
             className="mt-1"
           />
           {(pdfFiles[key] || initialData[key]) && !shouldDeletePdfs[key] && (
-            <div className="mt-2 text-sm text-gray-600">
-              Selected PDF: {pdfFiles[key]?.name || "Current PDF"}
+            <div className="mt-2 flex items-center gap-2">
+              <span className="text-sm text-gray-600">
+                Selected PDF: {pdfFiles[key]?.name || "Current PDF"}
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const url = pdfFiles[key]
+                    ? URL.createObjectURL(pdfFiles[key]!)
+                    : initialData[key];
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = pdfFiles[key]?.name || "document.pdf";
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  if (pdfFiles[key]) {
+                    URL.revokeObjectURL(url);
+                  }
+                }}
+              >
+                Download PDF
+              </Button>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (key.toLowerCase().includes("youtube")) {
+      return (
+        <div className="space-y-2" key={key}>
+          <Label htmlFor={key}>{key}</Label>
+          <Input
+            id={key}
+            value={editedData[key] || ""}
+            onChange={(e) => handleInputChange(key, e.target.value)}
+            className="mt-1"
+            placeholder="Enter YouTube video URL or ID"
+          />
+          {editedData[key] && (
+            <div className="mt-2">
+              <div className="relative w-full aspect-video rounded-lg overflow-hidden">
+                <iframe
+                  src={`https://www.youtube.com/embed/${
+                    editedData[key].includes("youtube.com")
+                      ? editedData[key].split("v=")[1].split("&")[0]
+                      : editedData[key]
+                  }`}
+                  className="absolute top-0 left-0 w-full h-full"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
             </div>
           )}
         </div>
@@ -165,7 +219,7 @@ export function DynamicEditModal({
           />
           {(imageFiles[key] || initialData[key]) &&
             !shouldDeleteImages[key] && (
-              <div className="relative h-32 mt-2 rounded group">
+              <div className="relative mt-2 rounded group">
                 <Image
                   src={
                     imageFiles[key]
@@ -173,8 +227,10 @@ export function DynamicEditModal({
                       : (initialData[key] as string)
                   }
                   alt="Preview"
-                  fill
-                  className="object-cover rounded"
+                  width={1200}
+                  height={800}
+                  className="w-full h-auto rounded"
+                  style={{ maxWidth: "100%", height: "auto" }}
                 />
                 <Button
                   type="button"
@@ -220,16 +276,20 @@ export function DynamicEditModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {Object.entries(initialData).map(([key, value]) =>
-            renderField(key, value)
-          )}
-          <div className="flex justify-end space-x-2">
-            <Button variant="outline" onClick={onClose}>
+        <form onSubmit={handleSubmit}>
+          <div className="max-h-[calc(90vh-180px)] overflow-y-auto pr-2">
+            <div className="space-y-4">
+              {Object.entries(initialData).map(([key, value]) =>
+                renderField(key, value)
+              )}
+            </div>
+          </div>
+          <div className="flex justify-end space-x-2 pt-4 border-t mt-4">
+            <Button variant="outline" type="button" onClick={onClose}>
               Cancel
             </Button>
             <Button type="submit">Save</Button>

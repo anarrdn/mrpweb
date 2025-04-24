@@ -10,6 +10,7 @@ import { useContent } from "@/lib/content/content.context";
 import { Content, ContentSection } from "@/lib/content/types";
 import Image from "next/image";
 import { X } from "lucide-react";
+import { uploadImage, getValidImageUrl } from "@/lib/utils/image-upload";
 
 interface EditModalProps {
   isOpen: boolean;
@@ -30,6 +31,8 @@ export function EditModal({
   const [shouldDeleteImages, setShouldDeleteImages] = useState<
     Record<string, boolean>
   >({});
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewUrls, setPreviewUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     setEditedData(content);
@@ -49,24 +52,42 @@ export function EditModal({
     }));
   };
 
-  const handleFileChange = (
+  const handleFileChange = async (
     section: ContentSection,
     field: string,
     file: File
   ) => {
     const key = `${section}-${field}`;
     setImageFiles((prev) => ({ ...prev, [key]: file }));
-    const reader = new FileReader();
-    reader.onloadend = () => {
+    setIsUploading(true);
+
+    // Create preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setPreviewUrls((prev) => ({ ...prev, [key]: previewUrl }));
+
+    try {
+      // Upload the image to the database
+      const imageUrl = await uploadImage(file);
+
       setEditedData((prev) => ({
         ...prev,
         [section]: {
           ...prev[section],
-          [field]: reader.result,
+          [field]: imageUrl,
         },
       }));
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      // Clean up preview URL on error
+      URL.revokeObjectURL(previewUrl);
+      setPreviewUrls((prev) => {
+        const { [key]: _, ...rest } = prev;
+        return rest;
+      });
+    } finally {
+      setIsUploading(false);
+    }
+
     setShouldDeleteImages((prev) => ({ ...prev, [key]: false }));
   };
 
@@ -74,6 +95,16 @@ export function EditModal({
     const key = `${section}-${field}`;
     setImageFiles((prev) => ({ ...prev, [key]: null }));
     setShouldDeleteImages((prev) => ({ ...prev, [key]: true }));
+
+    // Clean up preview URL
+    if (previewUrls[key]) {
+      URL.revokeObjectURL(previewUrls[key]);
+      setPreviewUrls((prev) => {
+        const { [key]: _, ...rest } = prev;
+        return rest;
+      });
+    }
+
     setEditedData((prev) => ({
       ...prev,
       [section]: {
@@ -84,6 +115,10 @@ export function EditModal({
   };
 
   const handleSave = () => {
+    // Clean up all preview URLs
+    Object.values(previewUrls).forEach(URL.revokeObjectURL);
+    setPreviewUrls({});
+
     // Update each section individually
     const sectionsToUpdate = [
       "hero",
@@ -136,17 +171,19 @@ export function EditModal({
                 const file = e.target.files?.[0];
                 if (file) handleFileChange(sectionKey, "backgroundImage", file);
               }}
+              disabled={isUploading}
             />
+            {isUploading && (
+              <p className="text-sm text-gray-500">Uploading image...</p>
+            )}
             {sectionData?.backgroundImage &&
               !shouldDeleteImages[`${sectionKey}-backgroundImage`] && (
                 <div className="relative h-32 mt-2 rounded group">
                   <Image
                     src={
-                      imageFiles[`${sectionKey}-backgroundImage`]
-                        ? URL.createObjectURL(
-                            imageFiles[`${sectionKey}-backgroundImage`]!
-                          )
-                        : (sectionData.backgroundImage as string)
+                      previewUrls[`${sectionKey}-backgroundImage`] ||
+                      getValidImageUrl(sectionData.backgroundImage) ||
+                      ""
                     }
                     alt="Preview"
                     fill
@@ -182,17 +219,19 @@ export function EditModal({
                 const file = e.target.files?.[0];
                 if (file) handleFileChange(sectionKey, "mapImage", file);
               }}
+              disabled={isUploading}
             />
+            {isUploading && (
+              <p className="text-sm text-gray-500">Uploading image...</p>
+            )}
             {sectionData?.mapImage &&
               !shouldDeleteImages[`${sectionKey}-mapImage`] && (
                 <div className="relative h-32 mt-2 rounded group">
                   <Image
                     src={
-                      imageFiles[`${sectionKey}-mapImage`]
-                        ? URL.createObjectURL(
-                            imageFiles[`${sectionKey}-mapImage`]!
-                          )
-                        : (sectionData.mapImage as string)
+                      previewUrls[`${sectionKey}-mapImage`] ||
+                      getValidImageUrl(sectionData.mapImage) ||
+                      ""
                     }
                     alt="Map Preview"
                     fill
@@ -281,14 +320,18 @@ export function EditModal({
               const file = e.target.files?.[0];
               if (file) handleFileChange(sectionKey, "image", file);
             }}
+            disabled={isUploading}
           />
+          {isUploading && (
+            <p className="text-sm text-gray-500">Uploading image...</p>
+          )}
           {sectionData?.image && !shouldDeleteImages[`${sectionKey}-image`] && (
             <div className="relative h-32 mt-2 rounded group">
               <Image
                 src={
-                  imageFiles[`${sectionKey}-image`]
-                    ? URL.createObjectURL(imageFiles[`${sectionKey}-image`]!)
-                    : (sectionData.image as string)
+                  previewUrls[`${sectionKey}-image`] ||
+                  getValidImageUrl(sectionData.image) ||
+                  ""
                 }
                 alt="Preview"
                 fill
@@ -343,7 +386,9 @@ export function EditModal({
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>Save All</Button>
+          <Button onClick={handleSave} disabled={isUploading}>
+            Save All
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

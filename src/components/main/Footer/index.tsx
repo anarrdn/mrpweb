@@ -6,7 +6,24 @@ import { FaPhone, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
 
 const Footer = () => {
   const { content } = useContent();
-  const mapImageUrl = content.footer.mapImage; // Get the uploaded image URL/base64
+
+  const getValidImageUrl = (url: string | null) => {
+    if (!url) return null;
+
+    // If it's a base64 data URL, return it as is
+    if (url.startsWith("data:image")) {
+      return url;
+    }
+
+    // If it's a relative URL, add a leading slash
+    if (!url.startsWith("/") && !url.startsWith("http")) {
+      return `/${url}`;
+    }
+
+    return url;
+  };
+
+  const mapImageUrl = getValidImageUrl(content.footer.mapImage);
 
   return (
     <footer className="bg-gray-900 text-white">
@@ -40,9 +57,9 @@ const Footer = () => {
               <Image
                 src={mapImageUrl}
                 alt={`Map location: ${content.footer.address}`}
-                fill // Use fill combined with object-contain/cover
-                className="object-cover" // Change to object-cover to fill the container
-                priority // Load image eagerly if it's important
+                fill
+                className="object-cover"
+                priority
               />
             ) : (
               <p className="text-gray-500 text-center px-4">

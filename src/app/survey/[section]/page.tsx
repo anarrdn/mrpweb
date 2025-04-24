@@ -25,6 +25,7 @@ export default function SurveyPage() {
     image: null,
     pdf: null,
     link: null,
+    youtube: null,
   };
 
   if (!mounted) {
@@ -44,14 +45,16 @@ export default function SurveyPage() {
         <div className="max-w-3xl mx-auto">
           <div className="relative">
             {surveyContent.image && (
-              <div className="relative w-full aspect-[16/9] mb-8 rounded-2xl overflow-hidden shadow-lg">
+              <div className="relative w-full mb-8 rounded-2xl overflow-hidden shadow-lg">
                 <Image
                   src={surveyContent.image}
                   alt={surveyContent.title}
-                  fill
-                  className="object-cover"
+                  width={1920}
+                  height={1080}
+                  className="w-full h-auto"
                   priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  sizes="100vw"
+                  style={{ objectFit: "contain" }}
                 />
               </div>
             )}
@@ -65,6 +68,21 @@ export default function SurveyPage() {
               {surveyContent.description}
             </p>
           </div>
+
+          {surveyContent.youtube && (
+            <div className="relative w-full aspect-video mb-8 rounded-2xl overflow-hidden shadow-lg">
+              <iframe
+                src={`https://www.youtube.com/embed/${
+                  surveyContent.youtube.includes("youtube.com")
+                    ? surveyContent.youtube.split("v=")[1].split("&")[0]
+                    : surveyContent.youtube
+                }`}
+                className="absolute top-0 left-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {surveyContent.link && (
@@ -83,11 +101,19 @@ export default function SurveyPage() {
               <Button
                 variant="outline"
                 className="w-full sm:w-auto px-6 py-3 text-lg"
-                onClick={() =>
-                  surveyContent.pdf && window.open(surveyContent.pdf, "_blank")
-                }
+                onClick={() => {
+                  if (surveyContent.pdf) {
+                    const a = document.createElement("a");
+                    a.href = surveyContent.pdf;
+                    a.download = surveyContent.title + ".pdf";
+                    a.target = "_blank";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  }
+                }}
               >
-                PDF файл үзэх
+                PDF файл татах
               </Button>
             )}
           </div>
@@ -103,6 +129,7 @@ export default function SurveyPage() {
             image: surveyContent.image,
             pdf: surveyContent.pdf,
             link: surveyContent.link,
+            youtube: surveyContent.youtube,
           }}
           onSave={(updatedData) => {
             updateContent("survey", {
@@ -113,6 +140,7 @@ export default function SurveyPage() {
                 image: updatedData.image,
                 pdf: updatedData.pdf,
                 link: updatedData.link,
+                youtube: updatedData.youtube,
               },
             });
             setIsEditModalOpen(false);

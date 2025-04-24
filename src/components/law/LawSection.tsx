@@ -7,6 +7,7 @@ import { EditButton } from "@/components/ui/edit-button";
 import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
 import { Button } from "@/components/ui/button";
 import { LawItem } from "@/lib/content/types";
+import { useRouter } from "next/navigation";
 
 interface LawSectionProps {
   lawItem: LawItem;
@@ -16,6 +17,7 @@ export function LawSection({ lawItem }: LawSectionProps) {
   const { updateLawSection } = useContent();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
@@ -31,7 +33,7 @@ export function LawSection({ lawItem }: LawSectionProps) {
   }
 
   return (
-    <section className="py-24 bg-white pt-40 scroll-mt-40">
+    <section className="py-24 bg-white pt-40">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -43,15 +45,24 @@ export function LawSection({ lawItem }: LawSectionProps) {
         <div className="max-w-3xl mx-auto">
           <div className="relative">
             {lawItem.imageUrl && (
-              <div className="relative w-full aspect-[16/9] mb-8 rounded-2xl overflow-hidden shadow-lg">
-                <Image
-                  src={lawItem.imageUrl}
-                  alt={lawItem.title}
-                  fill
-                  className="object-cover"
-                  priority
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                />
+              <div className="relative w-full mb-8 rounded-2xl overflow-hidden shadow-lg">
+                {lawItem.imageUrl.startsWith("http") ||
+                lawItem.imageUrl.startsWith("/") ? (
+                  <Image
+                    src={lawItem.imageUrl}
+                    alt={lawItem.title}
+                    width={1920}
+                    height={1080}
+                    className="w-full h-auto"
+                    priority
+                    sizes="100vw"
+                    style={{ objectFit: "contain" }}
+                  />
+                ) : (
+                  <div className="w-full h-64 bg-gray-100 flex items-center justify-center">
+                    <span className="text-gray-500">Invalid image URL</span>
+                  </div>
+                )}
               </div>
             )}
             <div className="absolute top-4 right-4">
@@ -77,9 +88,19 @@ export function LawSection({ lawItem }: LawSectionProps) {
               <Button
                 variant="outline"
                 className="w-full sm:w-auto px-6 py-3 text-lg"
-                onClick={() => window.open(lawItem.pdfUrl, "_blank")}
+                onClick={() => {
+                  if (lawItem.pdfUrl) {
+                    const a = document.createElement("a");
+                    a.href = lawItem.pdfUrl;
+                    a.download = lawItem.title + ".pdf";
+                    a.target = "_blank";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                  }
+                }}
               >
-                PDF файл үзэх
+                PDF файл татах
               </Button>
             )}
           </div>

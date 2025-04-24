@@ -5,6 +5,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth/auth.context";
 import { ContentProvider } from "@/lib/content/content.context";
 import { Inter } from "next/font/google";
+import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -84,6 +85,7 @@ export default function RootLayout({
             <Footer />
           </ContentProvider>
         </AuthProvider>
+        <Toaster />
       </body>
     </html>
   );

@@ -25,6 +25,7 @@ export default function LinksPage() {
     image: null,
     websiteLink: null,
     pdfUrl: null,
+    youtube: null,
   };
 
   if (!mounted) {
@@ -66,12 +67,30 @@ export default function LinksPage() {
             </p>
           </div>
 
+          {linkContent.youtube && (
+            <div className="relative w-full aspect-video mb-8 rounded-2xl overflow-hidden shadow-lg">
+              <iframe
+                src={`https://www.youtube.com/embed/${
+                  linkContent.youtube.includes("youtube.com")
+                    ? linkContent.youtube.split("v=")[1].split("&")[0]
+                    : linkContent.youtube
+                }`}
+                className="absolute top-0 left-0 w-full h-full"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {linkContent.websiteLink && (
               <Button
                 variant="default"
                 className="w-full sm:w-auto px-6 py-3 text-lg"
-                onClick={() => window.open(linkContent.websiteLink, "_blank")}
+                onClick={() =>
+                  linkContent.websiteLink &&
+                  window.open(linkContent.websiteLink, "_blank")
+                }
               >
                 Вэбсайт руу очих
               </Button>
@@ -80,9 +99,12 @@ export default function LinksPage() {
               <Button
                 variant="outline"
                 className="w-full sm:w-auto px-6 py-3 text-lg"
-                onClick={() => window.open(linkContent.pdfUrl, "_blank")}
+                onClick={() =>
+                  linkContent.pdfUrl &&
+                  window.open(linkContent.pdfUrl, "_blank")
+                }
               >
-                PDF файл үзэх
+                PDF файл татах
               </Button>
             )}
           </div>
@@ -98,6 +120,7 @@ export default function LinksPage() {
             image: linkContent.image,
             websiteLink: linkContent.websiteLink,
             pdfUrl: linkContent.pdfUrl,
+            youtube: linkContent.youtube,
           }}
           onSave={(updatedData) => {
             updateContent("links", {
@@ -108,6 +131,7 @@ export default function LinksPage() {
                 image: updatedData.image,
                 websiteLink: updatedData.websiteLink,
                 pdfUrl: updatedData.pdfUrl,
+                youtube: updatedData.youtube,
               },
             });
             setIsEditModalOpen(false);

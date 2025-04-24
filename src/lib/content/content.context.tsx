@@ -20,15 +20,17 @@ import {
   ContentSection,
   PageContent,
 } from "./types";
+import { api } from "@/lib/api/client";
+import { toast } from "sonner";
 
 interface ContentContextType {
   content: Content;
   updateContent: (
     section: ContentSection,
     data: Content[ContentSection]
-  ) => void;
+  ) => Promise<void>;
   isLoading: boolean;
-  updateLawSection: (lawId: string, data: Partial<LawItem>) => void;
+  updateLawSection: (lawId: string, data: Partial<LawItem>) => Promise<void>;
   getLawSection: (lawId: string) => LawItem | undefined;
   saveChanges: () => Promise<SaveResult>;
 }
@@ -189,6 +191,7 @@ const initialContent: Content = {
       image: null,
       pdf: null,
       link: null,
+      youtube: null,
     },
     manage: {
       title: "Монгол улсын стандарт",
@@ -196,6 +199,7 @@ const initialContent: Content = {
       image: null,
       pdf: null,
       link: null,
+      youtube: null,
     },
     participate: {
       title: "Судалгаанд оролцох",
@@ -203,6 +207,7 @@ const initialContent: Content = {
       image: null,
       pdf: null,
       link: null,
+      youtube: null,
     },
     feedback: {
       title: "Саналаа өгөх",
@@ -210,6 +215,7 @@ const initialContent: Content = {
       image: null,
       pdf: null,
       link: null,
+      youtube: null,
     },
   },
   contract: {
@@ -253,142 +259,65 @@ const initialContent: Content = {
 
 const ContentContext = createContext<ContentContextType | undefined>(undefined);
 
-const STORAGE_KEYS = {
-  CONTENT: "content",
-  LAWS: "laws",
-  NEWS: "news",
-  SETTINGS: "settings",
-};
-
-// Function to check if a string is a base64 image
-function isBase64Image(str: string) {
-  return str.startsWith("data:image");
-}
-
-// Function to clean data before storage
-function cleanDataForStorage(data: any): any {
-  if (typeof data !== "object" || data === null) {
-    return data;
-  }
-
-  if (Array.isArray(data)) {
-    return data.map(cleanDataForStorage);
-  }
-
-  return Object.entries(data).reduce((acc, [key, value]) => {
-    if (typeof value === "string" && isBase64Image(value)) {
-      // For base64 images, store a placeholder
-      acc[key] = "image_placeholder";
-    } else if (typeof value === "object" && value !== null) {
-      acc[key] = cleanDataForStorage(value);
-    } else {
-      acc[key] = value;
-    }
-    return acc;
-  }, {} as Record<string, any>);
-}
-
 export function ContentProvider({ children }: { children: ReactNode }) {
   const [content, setContent] = useState<Content>(initialContent);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Load content from localStorage on mount
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const savedContent = localStorage.getItem(STORAGE_KEYS.CONTENT);
-        if (savedContent) {
-          const parsedContent = JSON.parse(savedContent);
-          // Merge with initial content, ensuring laws is always an array
-          const mergedContent = {
-            ...initialContent,
-            ...parsedContent,
-            laws:
-              Array.isArray(parsedContent.laws) && parsedContent.laws.length > 0
-                ? parsedContent.laws
-                : initialLawItems,
-          };
-          setContent(mergedContent);
-        }
-      } catch (error) {
-        console.error("Error loading content:", error);
-        setContent(initialContent);
-      }
-    }
-    setIsLoading(false);
+    fetchContent();
   }, []);
 
-  const updateContent = (
+  const fetchContent = async () => {
+    try {
+      const response = await api.getContent();
+      setContent(response.data as Content);
+    } catch (error) {
+      console.error("Error fetching content:", error);
+      toast.error("Failed to load content");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const updateContent = async (
     section: ContentSection,
     data: Content[ContentSection]
   ) => {
-    setContent((prev) => {
-      const newContent = {
-        ...prev,
-        [section]: data,
-        laws: section === "laws" && Array.isArray(data) ? data : prev.laws,
-      };
-
-      // Clean data before saving to localStorage
-      const cleanedContent = cleanDataForStorage(newContent);
-
-      // Save to localStorage
-      if (typeof window !== "undefined") {
-        try {
-          localStorage.setItem(
-            STORAGE_KEYS.CONTENT,
-            JSON.stringify(cleanedContent)
-          );
-        } catch (error) {
-          console.error("Error saving content:", error);
-          // If storage fails, at least keep the content in state
-        }
-      }
-
-      return newContent;
-    });
+    try {
+      const response = await api.updateContent(section, data);
+      setContent(response.data as Content);
+      toast.success("Content updated successfully");
+    } catch (error) {
+      console.error("Error updating content:", error);
+      toast.error("Failed to update content");
+      throw error;
+    }
   };
 
-  const updateLawSection = (lawId: string, data: Partial<LawItem>) => {
-    setContent((prev) => {
-      // Ensure laws array exists
-      const currentLaws = prev.laws || [];
-      const updatedLaws = currentLaws.map((law) =>
-        law.id === lawId ? { ...law, ...data } : law
-      );
-      const newContent = { ...prev, laws: updatedLaws };
-
-      // Save to localStorage immediately
-      if (typeof window !== "undefined") {
-        try {
-          localStorage.setItem(
-            STORAGE_KEYS.CONTENT,
-            JSON.stringify(newContent)
-          );
-        } catch (error) {
-          console.error("Error saving law data:", error);
-        }
-      }
-
-      return newContent;
-    });
+  const updateLawSection = async (lawId: string, data: Partial<LawItem>) => {
+    try {
+      const response = await api.updateLawContent(lawId, data);
+      setContent(response.data as Content);
+      toast.success("Law section updated successfully");
+    } catch (error) {
+      console.error("Error updating law section:", error);
+      toast.error("Failed to update law section");
+      throw error;
+    }
   };
 
   const getLawSection = (lawId: string): LawItem | undefined => {
-    // Ensure laws array exists
     const currentLaws = content.laws || [];
     return currentLaws.find((law) => law.id === lawId);
   };
 
   const saveChanges = async (): Promise<SaveResult> => {
     try {
-      if (typeof window !== "undefined") {
-        localStorage.setItem("content", JSON.stringify(content));
-        return { success: true };
-      }
-      return { success: false, error: "Window is not defined" };
+      // Since we're now saving to the backend immediately on each update,
+      // this function is mostly for backward compatibility
+      return { success: true };
     } catch (error) {
-      console.error("Error saving content:", error);
+      console.error("Error saving changes:", error);
       return { success: false, error: String(error) };
     }
   };
