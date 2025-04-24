@@ -1,0 +1,21 @@
+import Image from "next/image";
+import Link from "next/link";
+
+interface LogoProps {
+  dark?: boolean;
+}
+
+const Logo = ({ dark }: LogoProps) => {
+  return (
+    <Link href="/">
+      <Image
+        src={dark ? "/branding/logo_dark.png" : "/branding/logo_light.png"}
+        alt="Logo"
+        width={135}
+        height={45}
+      />
+    </Link>
+  );
+};
+
+export default Logo;
