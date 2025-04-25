@@ -27,8 +27,8 @@ const Dropdown = ({ label, items }: DropdownProps) => {
     e.preventDefault();
     if (href.startsWith("#")) {
       // If we're not on the main page, navigate to main page first
-      if (pathname !== "/") {
-        window.location.href = `/${href}`;
+      if (pathname !== "/main") {
+        window.location.href = `/main${href}`;
       } else {
         // If we're already on the main page, just scroll to the section
         const id = href.replace("#", "");

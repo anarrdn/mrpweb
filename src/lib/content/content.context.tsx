@@ -20,8 +20,8 @@ import {
   ContentSection,
   PageContent,
 } from "./types";
-import { api } from "@/lib/api/client";
 import { toast } from "sonner";
+import { apiClient } from "@/lib/api/client";
 
 interface ContentContextType {
   content: Content;
@@ -269,7 +269,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const fetchContent = async () => {
     try {
-      const response = await api.getContent();
+      const response = await apiClient.getContent();
       setContent(response.data as Content);
     } catch (error) {
       console.error("Error fetching content:", error);
@@ -284,7 +284,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
     data: Content[ContentSection]
   ) => {
     try {
-      const response = await api.updateContent(section, data);
+      const response = await apiClient.updateContent(section, data);
       setContent(response.data as Content);
       toast.success("Content updated successfully");
     } catch (error) {
@@ -296,7 +296,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
 
   const updateLawSection = async (lawId: string, data: Partial<LawItem>) => {
     try {
-      const response = await api.updateLawContent(lawId, data);
+      const response = await apiClient.updateLawContent(lawId, data);
       setContent(response.data as Content);
       toast.success("Law section updated successfully");
     } catch (error) {

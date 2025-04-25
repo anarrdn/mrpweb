@@ -1,84 +1,76 @@
 import { NextResponse } from "next/server";
-import { config } from "@/lib/config";
+import { cookies } from "next/headers";
+
+// This would connect to your actual backend API
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { email, password, name, pharmacyId, pharmacyAddress } = body;
+    const {
+      name,
+      username,
+      email,
+      password,
+      pharmacy_name,
+      pharmacy_register_number,
+      pharmacy_address,
+      phone_number,
+    } = body;
 
-    // Validate required fields
-    if (!email || !password || !name || !pharmacyId || !pharmacyAddress) {
-      return NextResponse.json(
-        { error: "Бүх талбарыг бөглөнө үү" },
-        { status: 400 }
-      );
-    }
-
-    console.log("Sending request to backend:", {
-      url: `${config.backendUrl}/api/auth/register`,
-      body: { email, name, pharmacyId, pharmacyAddress },
+    // Call your actual backend API for registration
+    const response = await fetch(`${API_URL}/auth/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name,
+        username,
+        email,
+        password,
+        pharmacy_name,
+        pharmacy_register_number,
+        pharmacy_address,
+        phone_number,
+      }),
     });
 
-    let response;
-    try {
-      response = await fetch(`${config.backendUrl}/api/auth/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-          name,
-          pharmacyId,
-          pharmacyAddress,
-          role: "pending",
-          status: "pending",
-        }),
-      });
-    } catch (fetchError) {
-      console.error("Error connecting to backend:", fetchError);
-      return NextResponse.json(
-        {
-          error: "Серверт холбогдох боломжгүй байна. Дараа дахин оролдоно уу.",
-        },
-        { status: 503 }
-      );
-    }
-
-    console.log("Backend response status:", response.status);
-    const responseText = await response.text();
-    console.log("Backend response text:", responseText);
-
-    let data;
-    try {
-      data = responseText ? JSON.parse(responseText) : {};
-    } catch (e) {
-      console.error("Error parsing response:", e);
-      console.error("Response text that failed to parse:", responseText);
-      return NextResponse.json(
-        { error: "Серверийн хариу буруу форматтай байна" },
-        { status: 500 }
-      );
-    }
-
     if (!response.ok) {
+      const error = await response.json();
       return NextResponse.json(
-        { error: data.message || "Бүртгэл үүсгэхэд алдаа гарлаа" },
+        { error: error.message || "Registration failed" },
         { status: response.status }
       );
     }
 
-    return NextResponse.json(data);
+    const data = await response.json();
+
+    // If registration auto-logs in the user, set secure cookies
+    if (data.token) {
+      const cookieStore = await cookies();
+      cookieStore.set("token", data.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        path: "/",
+        sameSite: "strict",
+      });
+
+      cookieStore.set("user", JSON.stringify(data.user || data), {
+        httpOnly: false,
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 60 * 24 * 7, // 1 week
+        path: "/",
+        sameSite: "strict",
+      });
+    }
+
+    return NextResponse.json({ success: true, user: data.user || data });
   } catch (error) {
-    console.error("Error in registration route:", error);
+    console.error("Registration error:", error);
     return NextResponse.json(
-      {
-        error:
-          error instanceof Error
-            ? error.message
-            : "Бүртгэл үүсгэхэд алдаа гарлаа",
-      },
+      { error: "Internal server error" },
       { status: 500 }
     );
   }

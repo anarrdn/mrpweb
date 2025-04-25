@@ -5,13 +5,10 @@ import { MENU } from "@/lib/config";
 import { DROPDOWN_ITEMS } from "./dropdownContents";
 import Dropdown from "./Dropdown";
 import { useAuth } from "@/lib/auth/auth.context";
+import { memo } from "react";
 
-export const NavigationMenu = () => {
+const NavigationMenu = () => {
   const { user, isAuthenticated } = useAuth();
-
-  console.log("NavigationMenu - User:", user);
-  console.log("NavigationMenu - Is Authenticated:", isAuthenticated);
-  console.log("NavigationMenu - User Role:", user?.role);
 
   return (
     <div className="flex items-center gap-4">
@@ -61,3 +58,5 @@ export const NavigationMenu = () => {
     </div>
   );
 };
+
+export default memo(NavigationMenu);

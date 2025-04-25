@@ -26,5 +26,6 @@ export const MENU = [
 ];
 
 export const config = {
-  backendUrl: process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8080",
+  backendUrl:
+    process.env.NEXT_PUBLIC_BACKEND_URL || "http://192.168.88.93:8080",
 };

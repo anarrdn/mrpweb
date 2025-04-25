@@ -1,11 +1,9 @@
 import Footer from "@/components/main/Footer";
-import Header from "@/components/main/Header";
 import type { Metadata } from "next";
 import "./globals.css";
-import { AuthProvider } from "@/lib/auth/auth.context";
-import { ContentProvider } from "@/lib/content/content.context";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
+import ClientLayout from "@/components/ClientLayout";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -78,13 +76,7 @@ export default function RootLayout({
       <body
         className={`antialiased relative bg-[#F1F1F1] min-h-screen flex flex-col ${inter.className}`}
       >
-        <AuthProvider>
-          <ContentProvider>
-            <Header />
-            <main className="flex-1 min-h-[calc(100vh-4rem)]">{children}</main>
-            <Footer />
-          </ContentProvider>
-        </AuthProvider>
+        <ClientLayout>{children}</ClientLayout>
         <Toaster />
       </body>
     </html>

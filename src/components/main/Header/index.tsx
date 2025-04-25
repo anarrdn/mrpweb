@@ -3,7 +3,7 @@
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { useState, Suspense } from "react";
 import { TitleSection } from "./TitleSection";
-import { NavigationMenu } from "./NavigationMenu";
+import NavigationMenu from "./NavigationMenu";
 import dynamic from "next/dynamic";
 
 const AuthModal = dynamic(() => import("./AuthModal"), {

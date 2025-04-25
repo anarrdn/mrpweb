@@ -1,35 +1,40 @@
 import axios, { AxiosInstance } from "axios";
-import Cookies from "js-cookie";
+import { config } from "../config";
 
 export interface User {
   id: string;
   email: string;
   name: string;
-  pharmacyId: string;
-  pharmacyAddress: string;
-  role: "USER" | "ADMIN";
-  status: "PENDING" | "APPROVED" | "REJECTED";
-  isPremium: boolean;
+  role: "user" | "admin";
+  isApproved: boolean;
+  pharmacyName?: string;
+  pharmacyRegisterNumber?: string;
+  pharmacyAddress?: string;
+  phoneNumber?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-export interface LoginResponse {
-  token: string;
-  user: User;
+export interface LoginRequest {
+  email: string;
+  password: string;
 }
 
 export interface RegisterRequest {
   email: string;
   password: string;
   name: string;
-  pharmacyId: string;
+  username: string;
+  pharmacyName: string;
+  payment_proof: string;
+  pharmacyRegisterNumber: string;
   pharmacyAddress: string;
+  phoneNumber: string;
 }
 
-export interface LoginRequest {
-  email: string;
-  password: string;
+export interface AuthResponse {
+  token: string;
+  user: User;
 }
 
 export interface ApiResponse<T> {
@@ -38,115 +43,141 @@ export interface ApiResponse<T> {
 }
 
 export interface Content {
-  // Define the structure of the content object
+  hero?: {
+    title: string;
+    subtitle: string;
+    backgroundImage: string | null;
+  };
+  // Add other content sections as needed
 }
 
 export interface LawItem {
   // Define the structure of the law item object
 }
 
-export class ApiClient {
-  private baseUrl: string;
+class ApiClient {
   private axiosInstance: AxiosInstance;
-  private readonly TOKEN_COOKIE = "token";
-  private token: string | null;
+  private token: string | null = null;
+  private authRequiredPaths = ["/auth/profile", "/admin/", "/api/content"];
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
     this.axiosInstance = axios.create({
-      baseURL: this.baseUrl,
+      baseURL: config.backendUrl,
       headers: {
         "Content-Type": "application/json",
       },
     });
 
-    // Add request interceptor to include auth token
+    // Add response interceptor for error handling
+    this.axiosInstance.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        const isAuthRequiredPath = this.authRequiredPaths.some((path) =>
+          error.config?.url?.startsWith(path)
+        );
+
+        if (error.response?.status === 401 && isAuthRequiredPath) {
+          // Clear token and redirect to login only for auth-required paths
+          this.clearToken();
+          window.location.href = "/auth/login";
+        }
+        return Promise.reject(this.handleError(error));
+      }
+    );
+
+    // Add request interceptor to add token
     this.axiosInstance.interceptors.request.use((config) => {
-      const token = this.getToken();
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
+      if (this.token) {
+        config.headers.Authorization = `Bearer ${this.token}`;
       }
       return config;
     });
-
-    this.token = Cookies.get(this.TOKEN_COOKIE) || null;
   }
 
-  // Token management
-  public setToken(token: string | null) {
+  private handleError(error: any): Error {
+    if (error.response?.data?.message) {
+      return new Error(error.response.data.message);
+    }
+    if (error.response?.data?.error) {
+      return new Error(error.response.data.error);
+    }
+    return new Error("An unexpected error occurred");
+  }
+
+  setToken(token: string | null) {
+    this.token = token;
     if (token) {
-      Cookies.set(this.TOKEN_COOKIE, token, {
-        expires: 7,
-        secure: true,
-        sameSite: "strict",
-      });
+      localStorage.setItem("token", token);
     } else {
-      Cookies.remove(this.TOKEN_COOKIE);
+      localStorage.removeItem("token");
     }
   }
 
-  public getToken(): string | null {
-    return Cookies.get(this.TOKEN_COOKIE) || null;
+  clearToken() {
+    this.setToken(null);
   }
 
-  private get headers() {
-    return {
-      Authorization: `Bearer ${this.token}`,
-      "Content-Type": "application/json",
-    };
-  }
-
-  // Auth endpoints
-  public async login(data: LoginRequest): Promise<LoginResponse> {
-    const response = await this.axiosInstance.post<LoginResponse>(
+  async login(data: LoginRequest): Promise<AuthResponse> {
+    const response = await this.axiosInstance.post<AuthResponse>(
       "/auth/login",
       data
     );
+    this.setToken(response.data.token);
     return response.data;
   }
 
-  public async register(data: RegisterRequest): Promise<User> {
-    const response = await this.axiosInstance.post<User>(
+  async register(data: RegisterRequest): Promise<AuthResponse> {
+    const response = await this.axiosInstance.post<AuthResponse>(
       "/auth/register",
       data
     );
+    this.setToken(response.data.token);
     return response.data;
   }
 
-  public async getProfile(): Promise<User> {
+  async logout(): Promise<void> {
+    try {
+      await this.axiosInstance.post("/auth/logout");
+    } finally {
+      this.clearToken();
+    }
+  }
+
+  async getProfile(): Promise<User> {
     const response = await this.axiosInstance.get<User>("/auth/profile");
     return response.data;
   }
 
-  public async refreshToken(): Promise<LoginResponse> {
-    const response = await this.axiosInstance.post<LoginResponse>(
-      "/auth/refresh"
-    );
+  async updateProfile(data: Partial<User>): Promise<User> {
+    const response = await this.axiosInstance.put<User>("/auth/profile", data);
     return response.data;
   }
 
   // Admin endpoints
   public async listUsers(): Promise<ApiResponse<User[]>> {
-    const response = await axios.get(`${this.baseUrl}/admin/users`, {
-      headers: this.headers,
+    const response = await axios.get(`${config.backendUrl}/admin/users`, {
+      headers: {
+        Authorization: `Bearer ${this.token}`,
+        "Content-Type": "application/json",
+      },
     });
     return response.data;
   }
 
   public async approveUser(userId: string): Promise<ApiResponse<User>> {
     const response = await axios.put(
-      `${this.baseUrl}/admin/users/${userId}/approve`,
+      `${config.backendUrl}/admin/users/${userId}/approve`,
       {},
-      { headers: this.headers }
+      { headers: { Authorization: `Bearer ${this.token}` } }
     );
     return response.data;
   }
 
   public async rejectUser(userId: string): Promise<ApiResponse<User>> {
     const response = await axios.put(
-      `${this.baseUrl}/admin/users/${userId}/reject`,
+      `${config.backendUrl}/admin/users/${userId}/reject`,
       {},
-      { headers: this.headers }
+      { headers: { Authorization: `Bearer ${this.token}` } }
     );
     return response.data;
   }
@@ -156,9 +187,9 @@ export class ApiClient {
     isPremium: boolean
   ): Promise<ApiResponse<User>> {
     const response = await axios.put(
-      `${this.baseUrl}/admin/users/${userId}/premium`,
+      `${config.backendUrl}/admin/users/${userId}/premium`,
       { isPremium },
-      { headers: this.headers }
+      { headers: { Authorization: `Bearer ${this.token}` } }
     );
     return response.data;
   }
@@ -168,9 +199,9 @@ export class ApiClient {
     role: "USER" | "ADMIN"
   ): Promise<ApiResponse<User>> {
     const response = await axios.put(
-      `${this.baseUrl}/admin/users/${userId}/role`,
+      `${config.backendUrl}/admin/users/${userId}/role`,
       { role },
-      { headers: this.headers }
+      { headers: { Authorization: `Bearer ${this.token}` } }
     );
     return response.data;
   }
@@ -180,9 +211,9 @@ export class ApiClient {
     status: "PENDING" | "APPROVED" | "REJECTED"
   ): Promise<ApiResponse<User>> {
     const response = await axios.put(
-      `${this.baseUrl}/admin/users/${userId}/status`,
+      `${config.backendUrl}/admin/users/${userId}/status`,
       { status },
-      { headers: this.headers }
+      { headers: { Authorization: `Bearer ${this.token}` } }
     );
     return response.data;
   }
@@ -221,4 +252,4 @@ export class ApiClient {
   }
 }
 
-export const api = new ApiClient();
+export const apiClient = new ApiClient();
