@@ -1,21 +1,23 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { config } from "@/lib/config";
 
 // This would connect to your actual backend API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const API_URL = config.backendUrl;
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
+    console.log('Registration request body:', body);
     const {
       name,
-      username,
       email,
       password,
       pharmacy_name,
       pharmacy_register_number,
       pharmacy_address,
       phone_number,
+      payment_proof,
     } = body;
 
     // Call your actual backend API for registration
@@ -26,25 +28,27 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         name,
-        username,
         email,
         password,
         pharmacy_name,
         pharmacy_register_number,
         pharmacy_address,
         phone_number,
+        ...(payment_proof && { payment_proof }),
       }),
     });
 
+    const backendText = await response.clone().text();
+    console.log('Backend response:', backendText);
+
     if (!response.ok) {
-      const error = await response.json();
       return NextResponse.json(
-        { error: error.message || "Registration failed" },
+        { error: backendText || "Registration failed" },
         { status: response.status }
       );
     }
 
-    const data = await response.json();
+    const data = JSON.parse(backendText);
 
     // If registration auto-logs in the user, set secure cookies
     if (data.token) {

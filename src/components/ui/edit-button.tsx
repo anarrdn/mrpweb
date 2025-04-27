@@ -9,14 +9,14 @@ interface EditButtonProps {
 }
 
 export function EditButton({ onClick, className = "" }: EditButtonProps) {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  if (!mounted || !isAuthenticated) {
+  if (!mounted || !isAuthenticated || user?.role !== 'admin') {
     return null;
   }
 

@@ -2,15 +2,15 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 // This would connect to your actual backend API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { email, password } = body;
 
-    // Call your actual backend API
-    const response = await fetch(`${API_URL}/auth/login`, {
+    // Call your actual backend API (use /api/login instead of /login)
+    const response = await fetch(`${API_URL}/api/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -18,15 +18,23 @@ export async function POST(request: Request) {
       body: JSON.stringify({ email, password }),
     });
 
+    // Debug log backend response status
+    console.log('Backend login response status:', response.status);
+
+    const data = await response.json();
+    // Debug log backend response body
+    console.log('Backend login response body:', data);
+
     if (!response.ok) {
-      const error = await response.json();
       return NextResponse.json(
-        { error: error.message || "Login failed" },
+        { error: data.error || "Login failed" },
         { status: response.status }
       );
     }
 
-    const data = await response.json();
+    // Debug log for token and user
+    console.log('Token:', data.token);
+    console.log('User:', data.user);
 
     // Set HTTP-only cookies for security
     const cookieStore = await cookies();

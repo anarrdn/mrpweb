@@ -8,7 +8,12 @@ interface LogoProps {
 const Logo = ({ dark }: LogoProps) => {
   return (
     <Link href="/">
-      <Image src="/branding/logo.png" alt="Logo" width={135} height={45} />
+      <Image 
+        src={dark ? "/branding/logo_dark.png" : "/branding/logo.png"} 
+        alt="Logo" 
+        width={135} 
+        height={45} 
+      />
     </Link>
   );
 };

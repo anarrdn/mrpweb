@@ -7,7 +7,8 @@ import {
   useEffect,
   ReactNode,
 } from "react";
-import { apiClient, User } from "../api/client";
+import { apiClient } from "../api/client";
+import { User } from "../api/types";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -25,9 +26,10 @@ interface AuthContextType {
     pharmacyRegisterNumber: string;
     pharmacyAddress: string;
     phoneNumber: string;
+    payment_proof?: string;
   }) => Promise<void>;
-  logout: () => Promise<void>;
-  isAdmin: boolean;
+  logout: () => void;
+  error: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,38 +37,67 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (token) {
-        apiClient.setToken(token);
-        const user = await apiClient.getProfile();
-        setUser(user);
-      }
-    } catch (error) {
-      console.error("Auth check failed:", error);
-      await logout();
-    } finally {
+    // Check if user is already logged in
+    const token = localStorage.getItem('token');
+    if (token) {
+      apiClient.setToken(token);
+      // Validate token and fetch user profile
+      apiClient.validateToken()
+        .then(isValid => {
+          if (isValid) {
+            return apiClient.getProfile();
+          } else {
+            throw new Error('Invalid token');
+          }
+        })
+        .then(user => {
+          setUser(user);
+          setIsLoading(false);
+        })
+        .catch(() => {
+          localStorage.removeItem('token');
+          apiClient.setToken(null);
+          setUser(null);
+          setIsLoading(false);
+        });
+    } else {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await apiClient.login({ email, password });
-      setUser(response.user);
+      setError(null);
+      console.log('Starting login process...');
+      const response = await apiClient.login(email, password);
+      console.log('Login response:', {
+        token: response.token ? 'present' : 'missing',
+        user: response.user,
+        message: response.message
+      });
+      
+      localStorage.setItem('token', response.token);
+      apiClient.setToken(response.token);
+      
+      if (response.user) {
+        console.log('Setting user:', response.user);
+        setUser(response.user);
+      } else {
+        console.log('No user in response, fetching profile...');
+        const profile = await apiClient.getProfile();
+        console.log('Fetched profile:', profile);
+        setUser(profile);
+      }
+      
       toast.success("Successfully logged in");
-      router.push("/dashboard");
-    } catch (error) {
-      console.error("Login failed:", error);
-      toast.error(error instanceof Error ? error.message : "Login failed");
-      throw error;
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('Invalid credentials');
+      throw err;
     }
   };
 
@@ -79,12 +110,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     pharmacyRegisterNumber: string;
     pharmacyAddress: string;
     phoneNumber: string;
+    payment_proof?: string;
   }) => {
     try {
-      const response = await apiClient.register(data);
+      const response = await apiClient.register({
+        ...data,
+        payment_proof: data.payment_proof || "",
+      });
       setUser(response.user);
       toast.success("Registration successful");
-      router.push("/dashboard");
     } catch (error) {
       console.error("Registration failed:", error);
       toast.error(
@@ -94,15 +128,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
-    try {
-      await apiClient.logout();
-      setUser(null);
-      router.push("/");
-      toast.success("Successfully logged out");
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
+  const logout = () => {
+    localStorage.removeItem('token');
+    apiClient.setToken(null);
+    setUser(null);
+    router.push("/");
+    toast.success("Successfully logged out");
   };
 
   const value = {
@@ -112,7 +143,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     register,
     logout,
-    isAdmin: user?.role === "admin",
+    error
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

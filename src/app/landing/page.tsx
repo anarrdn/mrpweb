@@ -1,119 +1,188 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import AuthModal from "@/components/auth/AuthModal";
 import { useAuth } from "@/lib/auth/auth.context";
 import { useRouter } from "next/navigation";
+import { apiClient } from "@/lib/api/client";
+import { Button } from "@/components/ui/button";
+import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
+import { Bell, LogIn, UserPlus } from "lucide-react";
 
 export default function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const { login, register } = useAuth();
-  const router = useRouter();
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [landing, setLanding] = useState<{ backgroundImage?: string | null }>({ backgroundImage: null });
+  const [contentError, setContentError] = useState<string | null>(null);
+  const { user, isAuthenticated, logout, register } = useAuth();
+  const isAdmin = user?.role === 'admin';
 
-  const handleLogin = async (email: string, password: string) => {
-    setIsLoading(true);
-    setError("");
-
-    try {
-      // Use the server-side API route for authentication
-      const response = await fetch("/api/auth", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Login failed");
-      }
-
-      // Close the modal and redirect on success
+  // Close AuthModal when authenticated
+  useEffect(() => {
+    if (isAuthenticated && isAuthModalOpen) {
       setIsAuthModalOpen(false);
-      router.push("/main"); // Redirect to the main dashboard
-      router.refresh(); // Refresh the page to get the new auth state
+    }
+  }, [isAuthenticated, isAuthModalOpen]);
+
+  const fetchContent = useCallback(async () => {
+    try {
+      setContentError(null);
+      const response = await apiClient.getContent();
+      if ('landing' in response && response.landing) {
+        setLanding((response as any).landing);
+      }
     } catch (error) {
-      console.error("Login failed:", error);
-      setError(error instanceof Error ? error.message : "Login failed");
-    } finally {
-      setIsLoading(false);
+      setContentError("Failed to fetch content");
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchContent();
+  }, [fetchContent]);
+
+  const getValidImageUrl = (url: string | null | undefined) => {
+    if (!url) return null;
+    if (url.startsWith("data:image")) return url;
+    if (!url.startsWith("/") && !url.startsWith("http")) return `/${url}`;
+    return url;
+  };
+
+  const handleSave = async (updatedData: Record<string, any>) => {
+    try {
+      setContentError(null);
+      // Convert File to base64 if it's a file upload
+      if (updatedData.backgroundImage instanceof File) {
+        const base64Image = await fileToBase64(updatedData.backgroundImage);
+        updatedData.backgroundImage = base64Image;
+      }
+      
+      const response = await apiClient.updateContent("landing", updatedData);
+      if ('landing' in response && response.landing) {
+        setLanding((response as any).landing);
+      }
+      setIsEditModalOpen(false);
+    } catch (error) {
+      setContentError("Failed to save content");
     }
   };
 
+  const imageUrl = getValidImageUrl(landing.backgroundImage);
+
+  // Helper to convert File to base64
+  function fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  // Wrapper for registration to convert FormData to object
   const handleRegister = async (formData: FormData) => {
-    setIsLoading(true);
-    setError("");
-    try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        body: formData,
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Registration failed");
+    const data: any = {};
+    for (const [key, value] of formData.entries()) {
+      if (key === 'payment_proof' && value instanceof File && value.size > 0) {
+        data[key] = await fileToBase64(value);
+      } else if (key !== 'username') {
+        data[key] = value;
       }
-      setIsAuthModalOpen(false);
-      router.push("/main");
-      router.refresh();
-    } catch (error) {
-      setError(error instanceof Error ? error.message : "Registration failed");
-    } finally {
-      setIsLoading(false);
     }
+    await register(data);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-900 to-blue-800 flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-white relative">
       {/* Navigation */}
-      <nav className="absolute top-0 right-0 p-4 text-white">
-        <div className="flex gap-4">
-          <Link href="/info" className="hover:text-blue-200">
-            Мэдээлэл
-          </Link>
-          <button
-            onClick={() => setIsAuthModalOpen(true)}
-            className="hover:text-blue-200"
+      <div className="fixed top-0 right-0 p-4 z-50 flex gap-4">
+        {isAdmin && (
+          <Button
+            onClick={() => setIsEditModalOpen(true)}
+            variant="outline"
+            className="bg-white/20 backdrop-blur-sm"
           >
-            Нэвтрэх
-          </button>
-          <button
-            onClick={() => setIsAuthModalOpen(true)}
-            className="hover:text-blue-200"
+            Edit Page
+          </Button>
+        )}
+        {isAuthenticated ? (
+          <Button
+            onClick={logout}
+            variant="ghost"
+            className="text-gray-800 hover:text-gray-600 hover:bg-transparent underline"
           >
-            Бүртгүүлэх
-          </button>
+            Гарах
+          </Button>
+        ) : (
+          <>
+            <Button
+              onClick={() => setIsAuthModalOpen(true)}
+              variant="ghost"
+              className="text-gray-800 hover:text-gray-600 hover:bg-transparent underline"
+            >
+              Мэдэгдэл
+            </Button>
+            <Button
+              onClick={() => setIsAuthModalOpen(true)}
+              variant="ghost"
+              className="text-gray-800 hover:text-gray-600 hover:bg-transparent underline"
+            >
+              Нэвтрэх
+            </Button>
+            <Button
+              onClick={() => setIsAuthModalOpen(true)}
+              variant="ghost"
+              className="text-gray-800 hover:text-gray-600 hover:bg-transparent underline"
+            >
+              Бүртгүүлэх
+            </Button>
+          </>
+        )}
+      </div>
+
+      {/* Background Image - Only show if admin has uploaded one */}
+      {imageUrl && (
+        <div className="absolute inset-0 z-0">
+          <Image
+            src={imageUrl}
+            alt=""
+            fill
+            className="object-cover"
+            priority
+          />
+          <div className="absolute inset-0 bg-black/30" />
         </div>
-      </nav>
+      )}
 
       {/* Main Content */}
-      <div className="container mx-auto px-4 py-10 flex flex-col items-center justify-center max-w-6xl">
+      <div className={`min-h-screen flex flex-col items-center justify-center px-4 relative z-10 ${imageUrl ? 'text-white' : 'text-gray-800'}`}>
         {/* Logo and Title */}
         <div className="text-center mb-12">
           <div className="w-32 h-32 mx-auto mb-6 relative">
-            <Image src="/logo.png" alt="Logo" fill className="object-contain" />
+            <Image src="/branding/logo.png" alt="Logo" fill className="object-contain" />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-4">
+          <h1 className="text-4xl font-bold mb-4">
             МОНГОЛЫН ЭМ ХАНГАМЖИЙН ШИНЭЧЛЭЛ ХОЛБОО
           </h1>
-          <p className="text-blue-100 text-lg max-w-3xl mx-auto">
+          <p className="text-lg max-w-3xl mx-auto">
             НИЙТИЙН ҮЙЛЧИЛГЭЭТЭЙ ЭМИЙН САНГУУДЫН НЭГДСЭН ГИШҮҮДДЭЭ ҮЙЛЧИЛДЭГ
             ТӨРИЙН БУС БАЙГУУЛЛАГА
           </p>
+          {contentError && (
+            <p className="text-red-500 bg-white/10 px-4 py-2 rounded absolute bottom-4 left-1/2 transform -translate-x-1/2">
+              {contentError}
+            </p>
+          )}
         </div>
 
         {/* Service Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mx-auto w-full">
+        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mx-auto w-full max-w-6xl">
           <Link
             href="/main"
-            className="bg-white bg-opacity-10 rounded-lg p-6 text-center text-white hover:bg-opacity-20 transition-all transform hover:-translate-y-1"
+            className="bg-white/10 backdrop-blur-md rounded-lg p-6 text-center hover:bg-white/20 transition-all transform hover:-translate-y-1 border border-white/20"
           >
-            <div className="w-16 h-16 mx-auto mb-4 bg-blue-700 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-white/30 rounded-full flex items-center justify-center">
               <svg
                 className="w-8 h-8"
                 fill="none"
@@ -133,9 +202,9 @@ export default function LandingPage() {
 
           <Link
             href="/schedule"
-            className="bg-white bg-opacity-10 rounded-lg p-6 text-center text-white hover:bg-opacity-20 transition-all transform hover:-translate-y-1"
+            className="bg-white/10 backdrop-blur-md rounded-lg p-6 text-center hover:bg-white/20 transition-all transform hover:-translate-y-1 border border-white/20"
           >
-            <div className="w-16 h-16 mx-auto mb-4 bg-blue-700 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-white/30 rounded-full flex items-center justify-center">
               <svg
                 className="w-8 h-8"
                 fill="none"
@@ -155,9 +224,9 @@ export default function LandingPage() {
 
           <Link
             href="/documents"
-            className="bg-white bg-opacity-10 rounded-lg p-6 text-center text-white hover:bg-opacity-20 transition-all transform hover:-translate-y-1"
+            className="bg-white/10 backdrop-blur-md rounded-lg p-6 text-center hover:bg-white/20 transition-all transform hover:-translate-y-1 border border-white/20"
           >
-            <div className="w-16 h-16 mx-auto mb-4 bg-blue-700 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-white/30 rounded-full flex items-center justify-center">
               <svg
                 className="w-8 h-8"
                 fill="none"
@@ -177,9 +246,9 @@ export default function LandingPage() {
 
           <Link
             href="/services"
-            className="bg-white bg-opacity-10 rounded-lg p-6 text-center text-white hover:bg-opacity-20 transition-all transform hover:-translate-y-1"
+            className="bg-white/10 backdrop-blur-md rounded-lg p-6 text-center hover:bg-white/20 transition-all transform hover:-translate-y-1 border border-white/20"
           >
-            <div className="w-16 h-16 mx-auto mb-4 bg-blue-700 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-white/30 rounded-full flex items-center justify-center">
               <svg
                 className="w-8 h-8"
                 fill="none"
@@ -197,11 +266,12 @@ export default function LandingPage() {
             <h3 className="text-lg font-semibold mb-2">ШИЛЭН ДАНС</h3>
           </Link>
 
-          <button
-            onClick={() => setIsAuthModalOpen(true)}
-            className="bg-white bg-opacity-10 rounded-lg p-6 text-center text-white hover:bg-opacity-20 transition-all transform hover:-translate-y-1"
+          <Button
+            onClick={isAuthenticated ? logout : () => setIsAuthModalOpen(true)}
+            variant="outline"
+            className="bg-white/10 backdrop-blur-md rounded-lg p-6 text-center hover:bg-white/20 transition-all transform hover:-translate-y-1 border border-white/20 h-full flex flex-col items-center justify-center"
           >
-            <div className="w-16 h-16 mx-auto mb-4 bg-blue-700 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto mb-4 bg-white/30 rounded-full flex items-center justify-center">
               <svg
                 className="w-8 h-8"
                 fill="none"
@@ -216,31 +286,30 @@ export default function LandingPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold mb-2">НЭВТРЭХ БҮРТГҮҮЛЭХ</h3>
-          </button>
+            <h3 className="text-lg font-semibold mb-2">
+              {isAuthenticated ? 'Гарах' : 'Нэвтрэх Бүртгүүлэх'}
+            </h3>
+          </Button>
         </div>
-      </div>
-
-      {/* Background Image */}
-      <div className="fixed inset-0 -z-10">
-        <Image
-          src="/landing-bg.jpg"
-          alt="Background"
-          fill
-          className="object-cover opacity-20"
-          priority
-        />
       </div>
 
       {/* Auth Modal */}
       <AuthModal
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
-        onLogin={handleLogin}
         onRegister={handleRegister}
-        isLoading={isLoading}
-        error={error}
       />
+
+      {/* Dynamic Editing Modal - Always present for admin users */}
+      {isAdmin && (
+        <DynamicEditModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          title="Edit Landing Page"
+          initialData={landing}
+          onSave={handleSave}
+        />
+      )}
     </div>
   );
 }

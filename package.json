@@ -23,7 +23,8 @@
     "@radix-ui/react-tabs": "^1.1.8",
     "@radix-ui/react-toast": "^1.2.10",
     "@types/js-cookie": "^3.0.6",
-    "axios": "^1.8.4",
+    "@types/uuid": "^10.0.0",
+    "axios": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "js-cookie": "^3.0.5",
@@ -40,7 +41,8 @@
     "sonner": "^2.0.3",
     "tailwind-merge": "^2.6.0",
     "tailwind-scrollbar": "^4.0.2",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "@types/node": "^22.15.1",

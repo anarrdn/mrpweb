@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth.context";
-import UserList from "@/components/admin/UserList";
+import UserManagement from "@/components/admin/UserManagement";
 
 export default function AdminPage() {
   const { user } = useAuth();
@@ -24,7 +24,7 @@ export default function AdminPage() {
       <h1 className="text-2xl font-bold mb-6">Админ Хяналтын Самбар</h1>
       <div className="bg-white rounded-lg shadow-md p-6">
         <h2 className="text-xl font-semibold mb-4">Хэрэглэгчийн Мэдээлэл</h2>
-        <UserList />
+        <UserManagement />
       </div>
     </div>
   );

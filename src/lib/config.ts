@@ -1,3 +1,5 @@
+import { config as apiConfig } from './api/config';
+
 export const MENU = [
   {
     label: "Танилцуулга",
@@ -26,6 +28,8 @@ export const MENU = [
 ];
 
 export const config = {
-  backendUrl:
-    process.env.NEXT_PUBLIC_BACKEND_URL || "http://192.168.88.93:8080",
+  backendUrl: apiConfig.backendUrl,
+  apiVersion: apiConfig.apiVersion,
+  timeout: apiConfig.timeout,
+  authTokenKey: apiConfig.authTokenKey,
 };

@@ -6,7 +6,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://backend:8080
+      - NEXT_PUBLIC_API_URL=http://backend:8000/api
       - NODE_ENV=production
     depends_on:
       - backend
@@ -14,9 +14,9 @@ services:
   backend:
     build:
       context: ../backend
-      dockerfile: Dockerfile.backend
+      dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8000:8000"
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432

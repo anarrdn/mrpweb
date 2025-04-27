@@ -1,46 +1,51 @@
 "use client";
 
-import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
-import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth/auth.context";
 import { apiClient } from "@/lib/api/client";
-import { Content } from "@/lib/api/types";
+import { Button } from "@/components/ui/button";
+import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
+import Image from "next/image";
+import { toast } from "sonner";
 
-export default function Hero() {
+interface ContentEditorProps {
+  section: string;
+  defaultContent: Record<string, any>;
+  onContentUpdate?: (content: Record<string, any>) => void;
+}
+
+export default function ContentEditor({
+  section,
+  defaultContent,
+  onContentUpdate,
+}: ContentEditorProps) {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [content, setContent] = useState<Record<string, any>>({
-    title: "Welcome to Medtech MRP",
-    subtitle: "Your Medical Resource Planning Solution",
-    backgroundImage: null,
-  });
+  const [content, setContent] = useState<Record<string, any>>(defaultContent);
   const { isAdmin, isLoading: isAuthLoading } = useAuth();
 
-  const fetchContent = useCallback(async () => {
-    if (!isAdmin) return; // Only fetch content if admin
+  useEffect(() => {
+    fetchContent();
+  }, [section]);
+
+  const fetchContent = async () => {
+    if (!isAdmin) return;
 
     try {
       setIsLoading(true);
       setError(null);
       const response = await apiClient.getContent();
-      if (response.hero) {
-        setContent(response.hero);
+      if (response.data[section]) {
+        setContent(response.data[section]);
       }
     } catch (error) {
-      console.error("Failed to fetch hero content:", error);
+      console.error(`Failed to fetch ${section} content:`, error);
       setError("Failed to fetch content");
-      // Keep the default content on error
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin]);
-
-  useEffect(() => {
-    fetchContent();
-  }, [fetchContent]);
+  };
 
   const getValidImageUrl = (url: string | null) => {
     if (!url) return null;
@@ -52,24 +57,32 @@ export default function Hero() {
   const handleSave = async (updatedData: Record<string, any>) => {
     try {
       setError(null);
-      const response = await apiClient.updateContent("hero", updatedData);
-      if (response.hero) {
-        setContent(response.hero);
+      const response = await apiClient.updateContent(section, updatedData);
+      if (response.data[section]) {
+        setContent(response.data[section]);
+        onContentUpdate?.(response.data[section]);
       }
       setIsEditModalOpen(false);
+      toast.success("Content updated successfully");
     } catch (error) {
-      console.error("Failed to save hero content:", error);
+      console.error(`Failed to save ${section} content:`, error);
       setError("Failed to save content");
+      toast.error("Failed to update content");
     }
   };
 
-  const imageUrl = getValidImageUrl(content.backgroundImage);
+  const imageUrl = content.backgroundImage
+    ? getValidImageUrl(content.backgroundImage)
+    : null;
 
-  // Show default content while loading or on error
+  if (isLoading) {
+    return <div>Loading content...</div>;
+  }
+
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-white">
-      <div className="absolute inset-0 z-0">
-        {imageUrl && (
+    <div className="relative">
+      {imageUrl && (
+        <div className="absolute inset-0 z-0">
           <Image
             src={imageUrl}
             alt="Background"
@@ -77,29 +90,22 @@ export default function Hero() {
             className="object-cover"
             priority
             onError={(e) => {
-              // Handle image load error by removing src
               const img = e.target as HTMLImageElement;
               img.src = "";
             }}
           />
-        )}
-        <div className="absolute inset-0 bg-black/30" />
-      </div>
+          <div className="absolute inset-0 bg-black/30" />
+        </div>
+      )}
 
-      <div className="container mx-auto px-4 relative z-10 text-center text-white">
-        <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-          {content.title}
-        </h1>
-        <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-          {content.subtitle}
-        </p>
+      <div className="relative z-10">
         {!isAuthLoading && isAdmin && (
           <Button
             onClick={() => setIsEditModalOpen(true)}
             variant="outline"
             className="absolute top-4 right-4"
           >
-            Edit Hero
+            Edit Content
           </Button>
         )}
         {error && (
@@ -112,10 +118,10 @@ export default function Hero() {
       <DynamicEditModal
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
-        title="Edit Hero Section"
-        initialData={content}
         onSave={handleSave}
+        initialData={content}
+        title={`Edit ${section} Content`}
       />
-    </section>
+    </div>
   );
 } 

@@ -6,17 +6,19 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { useAuth } from "@/lib/auth/auth.context";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onLogin: (email: string, password: string) => Promise<void>;
-  onRegister: (formData: FormData) => Promise<void>;
+  onLogin?: (email: string, password: string) => Promise<void>;
+  onRegister?: (formData: FormData) => Promise<void>;
   isLoading?: boolean;
   error?: string;
 }
@@ -30,6 +32,7 @@ export default function AuthModal({
   error = "",
 }: AuthModalProps) {
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
+  const { login } = useAuth();
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState("");
@@ -49,7 +52,16 @@ export default function AuthModal({
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    await onLogin(loginEmail, loginPassword);
+    try {
+      if (onLogin) {
+        await onLogin(loginEmail, loginPassword);
+      } else {
+        await login(loginEmail, loginPassword);
+      }
+      onClose(); // Close modal on successful login
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -65,7 +77,9 @@ export default function AuthModal({
     formData.append("pharmacy_register_number", registerPharmacyRegisterNumber);
     formData.append("pharmacy_address", registerPharmacyAddress);
     formData.append("phone_number", registerPhoneNumber);
-    await onRegister(formData);
+    if (onRegister) {
+      await onRegister(formData);
+    }
   };
 
   return (
@@ -73,6 +87,9 @@ export default function AuthModal({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Нэвтрэх / Бүртгүүлэх</DialogTitle>
+          <DialogDescription>
+            Та өөрийн бүртгэлээр нэвтэрнэ үү эсвэл шинээр бүртгүүлнэ үү.
+          </DialogDescription>
         </DialogHeader>
 
         <Tabs
@@ -81,7 +98,7 @@ export default function AuthModal({
         >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Нэвтрэх</TabsTrigger>
-            <TabsTrigger value="register">Бүртгүүлэх</TabsTrigger>
+            {onRegister && <TabsTrigger value="register">Бүртгүүлэх</TabsTrigger>}
           </TabsList>
 
           <TabsContent value="login">
@@ -108,121 +125,126 @@ export default function AuthModal({
                   disabled={isLoading}
                 />
               </div>
+              {error && (
+                <div className="text-red-500 text-sm">{error}</div>
+              )}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Нэвтэрч байна..." : "Нэвтрэх"}
               </Button>
             </form>
           </TabsContent>
 
-          <TabsContent value="register">
-            <form onSubmit={handleRegister} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="register-email">И-мэйл</Label>
-                <Input
-                  id="register-email"
-                  type="email"
-                  value={registerEmail}
-                  onChange={(e) => setRegisterEmail(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-name">Нэр</Label>
-                <Input
-                  id="register-name"
-                  value={registerName}
-                  onChange={(e) => setRegisterName(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-username">Username</Label>
-                <Input
-                  id="register-username"
-                  value={registerUsername}
-                  onChange={(e) => setRegisterUsername(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-password">Нууц үг</Label>
-                <Input
-                  id="register-password"
-                  type="password"
-                  value={registerPassword}
-                  onChange={(e) => setRegisterPassword(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-pharmacy-name">
-                  Эмийн сангийн нэр
-                </Label>
-                <Input
-                  id="register-pharmacy-name"
-                  value={registerPharmacyName}
-                  onChange={(e) => setRegisterPharmacyName(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-receipt">Receipt (file)</Label>
-                <Input
-                  id="register-receipt"
-                  type="file"
-                  onChange={(e) =>
-                    setRegisterReceipt(e.target.files?.[0] || null)
-                  }
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-pharmacy-register-number">
-                  Эмийн сангийн регистрийн дугаар
-                </Label>
-                <Input
-                  id="register-pharmacy-register-number"
-                  value={registerPharmacyRegisterNumber}
-                  onChange={(e) =>
-                    setRegisterPharmacyRegisterNumber(e.target.value)
-                  }
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-pharmacy-address">
-                  Эмийн сангийн хаяг
-                </Label>
-                <Input
-                  id="register-pharmacy-address"
-                  value={registerPharmacyAddress}
-                  onChange={(e) => setRegisterPharmacyAddress(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="register-phone-number">Утасны дугаар</Label>
-                <Input
-                  id="register-phone-number"
-                  value={registerPhoneNumber}
-                  onChange={(e) => setRegisterPhoneNumber(e.target.value)}
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Бүртгүүлж байна..." : "Бүртгүүлэх"}
-              </Button>
-            </form>
-          </TabsContent>
+          {onRegister && (
+            <TabsContent value="register">
+              <form onSubmit={handleRegister} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="register-email">И-мэйл</Label>
+                  <Input
+                    id="register-email"
+                    type="email"
+                    value={registerEmail}
+                    onChange={(e) => setRegisterEmail(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="register-name">Нэр</Label>
+                  <Input
+                    id="register-name"
+                    value={registerName}
+                    onChange={(e) => setRegisterName(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="register-username">Username</Label>
+                  <Input
+                    id="register-username"
+                    value={registerUsername}
+                    onChange={(e) => setRegisterUsername(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="register-password">Нууц үг</Label>
+                  <Input
+                    id="register-password"
+                    type="password"
+                    value={registerPassword}
+                    onChange={(e) => setRegisterPassword(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="register-pharmacy-name">
+                    Эмийн сангийн нэр
+                  </Label>
+                  <Input
+                    id="register-pharmacy-name"
+                    value={registerPharmacyName}
+                    onChange={(e) => setRegisterPharmacyName(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="register-receipt">Receipt (file)</Label>
+                  <Input
+                    id="register-receipt"
+                    type="file"
+                    onChange={(e) =>
+                      setRegisterReceipt(e.target.files?.[0] || null)
+                    }
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="register-pharmacy-register-number">
+                    Эмийн сангийн регистрийн дугаар
+                  </Label>
+                  <Input
+                    id="register-pharmacy-register-number"
+                    value={registerPharmacyRegisterNumber}
+                    onChange={(e) =>
+                      setRegisterPharmacyRegisterNumber(e.target.value)
+                    }
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="register-pharmacy-address">
+                    Эмийн сангийн хаяг
+                  </Label>
+                  <Input
+                    id="register-pharmacy-address"
+                    value={registerPharmacyAddress}
+                    onChange={(e) => setRegisterPharmacyAddress(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="register-phone-number">Утасны дугаар</Label>
+                  <Input
+                    id="register-phone-number"
+                    value={registerPhoneNumber}
+                    onChange={(e) => setRegisterPhoneNumber(e.target.value)}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Бүртгүүлж байна..." : "Бүртгүүлэх"}
+                </Button>
+              </form>
+            </TabsContent>
+          )}
         </Tabs>
       </DialogContent>
     </Dialog>
