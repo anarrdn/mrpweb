@@ -16,6 +16,7 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: {
     email: string;
@@ -42,24 +43,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     // Check if user is already logged in
-    const token = localStorage.getItem('token');
+    const token = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("token="))
+      ?.split("=")[1];
     if (token) {
       apiClient.setToken(token);
       // Validate token and fetch user profile
-      apiClient.validateToken()
-        .then(isValid => {
+      apiClient
+        .validateToken()
+        .then((isValid) => {
           if (isValid) {
             return apiClient.getProfile();
           } else {
-            throw new Error('Invalid token');
+            throw new Error("Invalid token");
           }
         })
-        .then(user => {
+        .then((user) => {
           setUser(user);
           setIsLoading(false);
         })
         .catch(() => {
-          localStorage.removeItem('token');
+          document.cookie =
+            "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
           apiClient.setToken(null);
           setUser(null);
           setIsLoading(false);
@@ -72,31 +78,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       setError(null);
-      console.log('Starting login process...');
+      console.log("Starting login process...");
       const response = await apiClient.login(email, password);
-      console.log('Login response:', {
-        token: response.token ? 'present' : 'missing',
+      console.log("Login response:", {
+        token: response.token ? "present" : "missing",
         user: response.user,
-        message: response.message
+        message: response.message,
       });
-      
-      localStorage.setItem('token', response.token);
+
+      // Store token in cookies
+      document.cookie = `token=${response.token}; path=/; max-age=86400`; // 24 hours
       apiClient.setToken(response.token);
-      
+
       if (response.user) {
-        console.log('Setting user:', response.user);
+        console.log("Setting user:", response.user);
         setUser(response.user);
+        // Also store user in cookie for server-side access
+        document.cookie = `user=${JSON.stringify(
+          response.user
+        )}; path=/; max-age=86400`;
       } else {
-        console.log('No user in response, fetching profile...');
+        console.log("No user in response, fetching profile...");
         const profile = await apiClient.getProfile();
-        console.log('Fetched profile:', profile);
+        console.log("Fetched profile:", profile);
         setUser(profile);
+        // Store user in cookie for server-side access
+        document.cookie = `user=${JSON.stringify(
+          profile
+        )}; path=/; max-age=86400`;
       }
-      
+
       toast.success("Successfully logged in");
     } catch (err) {
-      console.error('Login error:', err);
-      setError('Invalid credentials');
+      console.error("Login error:", err);
+      setError("Invalid credentials");
       throw err;
     }
   };
@@ -129,7 +144,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
+    document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
     apiClient.setToken(null);
     setUser(null);
     router.push("/");
@@ -140,10 +156,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isAuthenticated: !!user,
     isLoading,
+    isAdmin: user?.role === "admin",
     login,
     register,
     logout,
-    error
+    error,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

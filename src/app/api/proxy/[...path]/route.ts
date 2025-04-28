@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { config } from "@/lib/config";
+import { apiConfig } from "@/lib/api/config";
 
 // Helper function to extract headers
 function getHeaders(req: NextRequest): HeadersInit {
@@ -52,13 +52,13 @@ export async function GET(
 ) {
   try {
     const path = params.path.join("/");
-    console.log(`Proxying GET request to ${config.backendUrl}/api/${path}`);
+    console.log(`Proxying GET request to ${apiConfig.backendUrl}/api/${path}`);
 
     const headers = getHeaders(req);
 
     console.log("Request headers:", headers);
 
-    const response = await fetch(`${config.backendUrl}/api/${path}`, {
+    const response = await fetch(`${apiConfig.backendUrl}/api/${path}`, {
       headers,
     });
 
@@ -80,7 +80,7 @@ export async function POST(
 ) {
   try {
     const path = params.path.join("/");
-    const url = `${config.backendUrl}/api/${path}`;
+    const url = `${apiConfig.backendUrl}/api/${path}`;
     console.log(`Proxying POST request to ${url}`);
 
     const body = await req.json();
@@ -113,12 +113,12 @@ export async function PUT(
 ) {
   try {
     const path = params.path.join("/");
-    console.log(`Proxying PUT request to ${config.backendUrl}/api/${path}`);
+    console.log(`Proxying PUT request to ${apiConfig.backendUrl}/api/${path}`);
 
     const body = await req.json();
     const headers = getHeaders(req);
 
-    const response = await fetch(`${config.backendUrl}/api/${path}`, {
+    const response = await fetch(`${apiConfig.backendUrl}/api/${path}`, {
       method: "PUT",
       headers,
       body: JSON.stringify(body),
@@ -140,11 +140,11 @@ export async function DELETE(
 ) {
   try {
     const path = params.path.join("/");
-    console.log(`Proxying DELETE request to ${config.backendUrl}/api/${path}`);
+    console.log(`Proxying DELETE request to ${apiConfig.backendUrl}/api/${path}`);
 
     const headers = getHeaders(req);
 
-    const response = await fetch(`${config.backendUrl}/api/${path}`, {
+    const response = await fetch(`${apiConfig.backendUrl}/api/${path}`, {
       method: "DELETE",
       headers,
     });

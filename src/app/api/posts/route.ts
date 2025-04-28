@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { config } from "@/lib/config";
+import { apiConfig } from "@/lib/api/config";
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { title, content } = body;
 
-    const response = await fetch(`${config.backendUrl}/posts`, {
+    const response = await fetch(`${apiConfig.backendUrl}/posts`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

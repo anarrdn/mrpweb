@@ -1,46 +1,57 @@
 "use client";
 
-import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth/auth.context";
 import { apiClient } from "@/lib/api/client";
 import { Content } from "@/lib/api/types";
+import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
+import { EditButton } from "@/components/ui/edit-button";
 
 export default function Hero() {
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [content, setContent] = useState<Record<string, any>>({
     title: "Welcome to Medtech MRP",
     subtitle: "Your Medical Resource Planning Solution",
     backgroundImage: null,
   });
-  const { isAdmin, isLoading: isAuthLoading } = useAuth();
 
   const fetchContent = useCallback(async () => {
-    if (!isAdmin) return; // Only fetch content if admin
-
     try {
       setIsLoading(true);
       setError(null);
       const response = await apiClient.getContent();
-      if (response.hero) {
-        setContent(response.hero);
+      if (response && response.hero) {
+        setContent({
+          title: response.hero.title || "Welcome to Medtech MRP",
+          subtitle:
+            response.hero.subtitle || "Your Medical Resource Planning Solution",
+          backgroundImage: response.hero.backgroundImage || null,
+        });
       }
     } catch (error) {
       console.error("Failed to fetch hero content:", error);
-      setError("Failed to fetch content");
-      // Keep the default content on error
+      // Silently handle the error without setting any state
     } finally {
       setIsLoading(false);
     }
-  }, [isAdmin]);
+  }, []);
 
   useEffect(() => {
     fetchContent();
   }, [fetchContent]);
+
+  const handleSave = async (data: Record<string, any>) => {
+    try {
+      await apiClient.updateContent("hero", data);
+      setContent(data);
+      setIsEditModalOpen(false);
+    } catch (error) {
+      console.error("Failed to update hero content:", error);
+      setError("Failed to update content");
+    }
+  };
 
   const getValidImageUrl = (url: string | null) => {
     if (!url) return null;
@@ -49,64 +60,29 @@ export default function Hero() {
     return url;
   };
 
-  const handleSave = async (updatedData: Record<string, any>) => {
-    try {
-      setError(null);
-      const response = await apiClient.updateContent("hero", updatedData);
-      if (response.hero) {
-        setContent(response.hero);
-      }
-      setIsEditModalOpen(false);
-    } catch (error) {
-      console.error("Failed to save hero content:", error);
-      setError("Failed to save content");
-    }
-  };
-
   const imageUrl = getValidImageUrl(content.backgroundImage);
 
-  // Show default content while loading or on error
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-white">
+      <EditButton onClick={() => setIsEditModalOpen(true)} />
       <div className="absolute inset-0 z-0">
-        {imageUrl && (
-          <Image
-            src={imageUrl}
-            alt="Background"
-            fill
-            className="object-cover"
-            priority
-            onError={(e) => {
-              // Handle image load error by removing src
-              const img = e.target as HTMLImageElement;
-              img.src = "";
-            }}
-          />
-        )}
+        <Image
+          src="/branding/consultation.jpg"
+          alt="Background"
+          fill
+          className="object-cover"
+          priority
+        />
         <div className="absolute inset-0 bg-black/30" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10 text-center text-white">
         <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-          {content.title}
+          {content?.title || "Welcome to Medtech MRP"}
         </h1>
         <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-          {content.subtitle}
+          {content?.subtitle || "Your Medical Resource Planning Solution"}
         </p>
-        {!isAuthLoading && isAdmin && (
-          <Button
-            onClick={() => setIsEditModalOpen(true)}
-            variant="outline"
-            className="absolute top-4 right-4"
-          >
-            Edit Hero
-          </Button>
-        )}
-        {error && (
-          <p className="text-red-500 bg-white/10 px-4 py-2 rounded absolute bottom-4 left-1/2 transform -translate-x-1/2">
-            {error}
-          </p>
-        )}
       </div>
 
       <DynamicEditModal
@@ -118,4 +94,4 @@ export default function Hero() {
       />
     </section>
   );
-} 
+}

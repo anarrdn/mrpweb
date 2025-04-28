@@ -4,12 +4,16 @@ export interface MapCoordinates {
 }
 
 export interface FooterContent {
-  title: string;
-  address: string;
-  phone1: string;
-  phone2: string;
-  email: string;
-  mapImage: string;
+  sections: Array<{
+    title: string;
+    mapImage: string | null;
+    address: string;
+    phone: string;
+    email: string;
+    socialLinks: Array<{ platform: string; url: string }>;
+    copyright: string;
+    links: Array<{ text: string; url: string }>;
+  }>;
 }
 
 export interface LawItem {

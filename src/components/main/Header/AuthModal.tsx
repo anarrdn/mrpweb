@@ -32,10 +32,12 @@ const AuthModal = () => {
 
   if (!mounted) return null;
 
+  // Remove login/logout buttons from header
+  return null;
+
   if (isAuthenticated) {
     return (
       <div className="flex items-center gap-4">
-        <span className="text-sm text-gray-600">Админ</span>
         <Button
           variant="outline"
           className="bg-white hover:bg-gray-100 px-6"

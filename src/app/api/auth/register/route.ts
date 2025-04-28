@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { config } from "@/lib/config";
+import { apiConfig } from "@/lib/api/config";
 
 // This would connect to your actual backend API
-const API_URL = config.backendUrl;
+const API_URL = apiConfig.backendUrl;
 
 export async function POST(request: Request) {
   try {

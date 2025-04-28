@@ -18,7 +18,17 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   onLogin?: (email: string, password: string) => Promise<void>;
-  onRegister?: (formData: FormData) => Promise<void>;
+  onRegister?: (data: {
+    email: string;
+    password: string;
+    name: string;
+    username: string;
+    pharmacy_name: string;
+    pharmacy_register_number: string;
+    pharmacy_address: string;
+    phone_number: number;
+    payment_proof: string;
+  }) => Promise<void>;
   isLoading?: boolean;
   error?: string;
 }
@@ -66,25 +76,47 @@ export default function AuthModal({
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Use FormData for file upload
-    const formData = new FormData();
-    formData.append("email", registerEmail);
-    formData.append("password", registerPassword);
-    formData.append("name", registerName);
-    formData.append("username", registerUsername);
-    formData.append("pharmacy_name", registerPharmacyName);
-    if (registerReceipt) formData.append("receipt", registerReceipt);
-    formData.append("pharmacy_register_number", registerPharmacyRegisterNumber);
-    formData.append("pharmacy_address", registerPharmacyAddress);
-    formData.append("phone_number", registerPhoneNumber);
-    if (onRegister) {
-      await onRegister(formData);
+    try {
+      // Convert phone number to number
+      const phoneNumber = parseInt(registerPhoneNumber.replace(/\D/g, ""), 10);
+
+      // Create registration data object
+      const registrationData = {
+        email: registerEmail,
+        password: registerPassword,
+        name: registerName,
+        username: registerUsername,
+        pharmacy_name: registerPharmacyName,
+        pharmacy_register_number: registerPharmacyRegisterNumber,
+        pharmacy_address: registerPharmacyAddress,
+        phone_number: phoneNumber,
+        payment_proof: registerReceipt
+          ? await fileToBase64(registerReceipt)
+          : "",
+      };
+
+      if (onRegister) {
+        await onRegister(registrationData);
+      }
+    } catch (error) {
+      console.error("Registration error:", error);
+      throw error;
     }
+  };
+
+  // Helper function to convert File to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Нэвтрэх / Бүртгүүлэх</DialogTitle>
           <DialogDescription>
@@ -98,12 +130,14 @@ export default function AuthModal({
         >
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="login">Нэвтрэх</TabsTrigger>
-            {onRegister && <TabsTrigger value="register">Бүртгүүлэх</TabsTrigger>}
+            {onRegister && (
+              <TabsTrigger value="register">Бүртгүүлэх</TabsTrigger>
+            )}
           </TabsList>
 
           <TabsContent value="login">
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
+            <form onSubmit={handleLogin} className="space-y-3">
+              <div className="space-y-1">
                 <Label htmlFor="login-email">И-мэйл</Label>
                 <Input
                   id="login-email"
@@ -114,7 +148,7 @@ export default function AuthModal({
                   disabled={isLoading}
                 />
               </div>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="login-password">Нууц үг</Label>
                 <Input
                   id="login-password"
@@ -125,9 +159,7 @@ export default function AuthModal({
                   disabled={isLoading}
                 />
               </div>
-              {error && (
-                <div className="text-red-500 text-sm">{error}</div>
-              )}
+              {error && <div className="text-red-500 text-sm">{error}</div>}
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Нэвтэрч байна..." : "Нэвтрэх"}
               </Button>
@@ -136,50 +168,56 @@ export default function AuthModal({
 
           {onRegister && (
             <TabsContent value="register">
-              <form onSubmit={handleRegister} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="register-email">И-мэйл</Label>
-                  <Input
-                    id="register-email"
-                    type="email"
-                    value={registerEmail}
-                    onChange={(e) => setRegisterEmail(e.target.value)}
-                    required
-                    disabled={isLoading}
-                  />
+              <form onSubmit={handleRegister} className="space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="register-email">И-мэйл</Label>
+                    <Input
+                      id="register-email"
+                      type="email"
+                      value={registerEmail}
+                      onChange={(e) => setRegisterEmail(e.target.value)}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="register-password">Нууц үг</Label>
+                    <Input
+                      id="register-password"
+                      type="password"
+                      value={registerPassword}
+                      onChange={(e) => setRegisterPassword(e.target.value)}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="register-name">Нэр</Label>
-                  <Input
-                    id="register-name"
-                    value={registerName}
-                    onChange={(e) => setRegisterName(e.target.value)}
-                    required
-                    disabled={isLoading}
-                  />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="register-name">Нэр</Label>
+                    <Input
+                      id="register-name"
+                      value={registerName}
+                      onChange={(e) => setRegisterName(e.target.value)}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="register-username">Username</Label>
+                    <Input
+                      id="register-username"
+                      value={registerUsername}
+                      onChange={(e) => setRegisterUsername(e.target.value)}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="register-username">Username</Label>
-                  <Input
-                    id="register-username"
-                    value={registerUsername}
-                    onChange={(e) => setRegisterUsername(e.target.value)}
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="register-password">Нууц үг</Label>
-                  <Input
-                    id="register-password"
-                    type="password"
-                    value={registerPassword}
-                    onChange={(e) => setRegisterPassword(e.target.value)}
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
+
+                <div className="space-y-1">
                   <Label htmlFor="register-pharmacy-name">
                     Эмийн сангийн нэр
                   </Label>
@@ -191,33 +229,35 @@ export default function AuthModal({
                     disabled={isLoading}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="register-receipt">Receipt (file)</Label>
-                  <Input
-                    id="register-receipt"
-                    type="file"
-                    onChange={(e) =>
-                      setRegisterReceipt(e.target.files?.[0] || null)
-                    }
-                    required
-                    disabled={isLoading}
-                  />
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label htmlFor="register-pharmacy-register-number">
+                      Регистрийн дугаар
+                    </Label>
+                    <Input
+                      id="register-pharmacy-register-number"
+                      value={registerPharmacyRegisterNumber}
+                      onChange={(e) =>
+                        setRegisterPharmacyRegisterNumber(e.target.value)
+                      }
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="register-phone-number">Утасны дугаар</Label>
+                    <Input
+                      id="register-phone-number"
+                      value={registerPhoneNumber}
+                      onChange={(e) => setRegisterPhoneNumber(e.target.value)}
+                      required
+                      disabled={isLoading}
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="register-pharmacy-register-number">
-                    Эмийн сангийн регистрийн дугаар
-                  </Label>
-                  <Input
-                    id="register-pharmacy-register-number"
-                    value={registerPharmacyRegisterNumber}
-                    onChange={(e) =>
-                      setRegisterPharmacyRegisterNumber(e.target.value)
-                    }
-                    required
-                    disabled={isLoading}
-                  />
-                </div>
-                <div className="space-y-2">
+
+                <div className="space-y-1">
                   <Label htmlFor="register-pharmacy-address">
                     Эмийн сангийн хаяг
                   </Label>
@@ -229,18 +269,22 @@ export default function AuthModal({
                     disabled={isLoading}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="register-phone-number">Утасны дугаар</Label>
+
+                <div className="space-y-1">
+                  <Label htmlFor="register-receipt">Receipt (file)</Label>
                   <Input
-                    id="register-phone-number"
-                    value={registerPhoneNumber}
-                    onChange={(e) => setRegisterPhoneNumber(e.target.value)}
+                    id="register-receipt"
+                    type="file"
+                    onChange={(e) =>
+                      setRegisterReceipt(e.target.files?.[0] || null)
+                    }
                     required
                     disabled={isLoading}
                   />
                 </div>
+
                 <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? "Бүртгүүлж байна..." : "Бүртгүүлэх"}
+                  {isLoading ? "Бүртгүүлж байна..." : "Бүргүүлэх"}
                 </Button>
               </form>
             </TabsContent>

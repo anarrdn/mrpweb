@@ -23,31 +23,43 @@ const Footer = () => {
     return url;
   };
 
-  const mapImageUrl = getValidImageUrl(content.footer.mapImage);
+  // Get the first section or use empty values as fallback
+  const footerSection = content.footer?.sections?.[0] || {
+    title: "",
+    mapImage: null,
+    address: "",
+    phone: "",
+    email: "",
+    socialLinks: [],
+    copyright: "",
+    links: [],
+  };
+
+  const mapImageUrl = getValidImageUrl(footerSection.mapImage);
 
   return (
     <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-12">
         {/* Contact Info */}
         <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-4 mb-8">
-          <div className="flex items-center gap-2">
-            <FaPhone className="w-5 h-5 text-gray-400" />
-            <p className="text-gray-400">{content.footer.phone1}</p>
-          </div>
-          {content.footer.phone2 && (
+          {footerSection.phone && (
             <div className="flex items-center gap-2">
               <FaPhone className="w-5 h-5 text-gray-400" />
-              <p className="text-gray-400">{content.footer.phone2}</p>
+              <p className="text-gray-400">{footerSection.phone}</p>
             </div>
           )}
-          <div className="flex items-center gap-2">
-            <FaEnvelope className="w-5 h-5 text-gray-400" />
-            <p className="text-gray-400">{content.footer.email}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <FaMapMarkerAlt className="w-5 h-5 text-gray-400" />
-            <p className="text-gray-400">{content.footer.address}</p>
-          </div>
+          {footerSection.email && (
+            <div className="flex items-center gap-2">
+              <FaEnvelope className="w-5 h-5 text-gray-400" />
+              <p className="text-gray-400">{footerSection.email}</p>
+            </div>
+          )}
+          {footerSection.address && (
+            <div className="flex items-center gap-2">
+              <FaMapMarkerAlt className="w-5 h-5 text-gray-400" />
+              <p className="text-gray-400">{footerSection.address}</p>
+            </div>
+          )}
         </div>
 
         {/* Map Image Section */}
@@ -56,7 +68,7 @@ const Footer = () => {
             {mapImageUrl ? (
               <Image
                 src={mapImageUrl}
-                alt={`Map location: ${content.footer.address}`}
+                alt={`Map location: ${footerSection.address}`}
                 fill
                 className="object-cover"
                 priority
@@ -72,8 +84,9 @@ const Footer = () => {
         {/* Copyright */}
         <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
           <p>
-            &copy; {new Date().getFullYear()} {content.footer.title}. Бүх эрх
-            хуулиар хамгаалагдсан.
+            &copy; {new Date().getFullYear()}{" "}
+            {footerSection.title || "Medtech MRP"}. Бүх эрх хуулиар
+            хамгаалагдсан.
           </p>
         </div>
       </div>

@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 
 // This would connect to your actual backend API
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://192.168.88.93:8000";
 
 export async function POST(request: Request) {
   try {
@@ -19,11 +19,11 @@ export async function POST(request: Request) {
     });
 
     // Debug log backend response status
-    console.log('Backend login response status:', response.status);
+    console.log("Backend login response status:", response.status);
 
     const data = await response.json();
     // Debug log backend response body
-    console.log('Backend login response body:', data);
+    console.log("Backend login response body:", data);
 
     if (!response.ok) {
       return NextResponse.json(
@@ -33,8 +33,8 @@ export async function POST(request: Request) {
     }
 
     // Debug log for token and user
-    console.log('Token:', data.token);
-    console.log('User:', data.user);
+    console.log("Token:", data.token);
+    console.log("User:", data.user);
 
     // Set HTTP-only cookies for security
     const cookieStore = await cookies();

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { config } from "@/lib/config";
+import { apiConfig } from "@/lib/api/config";
 
 export async function POST(request: Request) {
   try {
@@ -15,7 +15,7 @@ export async function POST(request: Request) {
     }
 
     const response = await fetch(
-      `${config.backendUrl}/api/admin/users/approve`,
+      `${apiConfig.backendUrl}/api/admin/users/approve`,
       {
         method: "POST",
         headers: {

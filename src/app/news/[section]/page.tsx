@@ -31,7 +31,7 @@ export default function NewsPage() {
     setMounted(true);
   }, []);
 
-  const newsContent = content.news[section] || {
+  const newsContent = content?.news?.[section] || {
     title: "",
     description: "",
     image: null,

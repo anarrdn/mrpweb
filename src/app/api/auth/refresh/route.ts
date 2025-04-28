@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { config } from "@/lib/config";
+import { apiConfig } from "@/lib/api/config";
 
 export async function POST(request: Request) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const response = await fetch(`${config.backendUrl}/auth/refresh`, {
+    const response = await fetch(`${apiConfig.backendUrl}/auth/refresh`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,

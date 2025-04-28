@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { config } from "@/lib/config";
+import { apiConfig } from "@/lib/api/config";
 
 export async function GET(request: Request) {
   try {
-    const response = await fetch(`${config.backendUrl}/api/admin/users`, {
+    const response = await fetch(`${apiConfig.backendUrl}/api/admin/users`, {
       headers: {
         Authorization: request.headers.get("Authorization") || "",
       },

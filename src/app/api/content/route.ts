@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { config } from "@/lib/config";
+import { apiConfig } from "@/lib/api/config";
 
 export async function GET(request: Request) {
   try {
@@ -11,7 +11,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const response = await fetch(`${config.backendUrl}/api/content`, {
+    const response = await fetch(`${apiConfig.backendUrl}/api/content`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { section, data } = body;
 
-    const response = await fetch(`${config.backendUrl}/api/content`, {
+    const response = await fetch(`${apiConfig.backendUrl}/api/content`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -91,7 +91,7 @@ export async function PUT(request: Request) {
     const { lawId, data } = body;
 
     const response = await fetch(
-      `${config.backendUrl}/api/content/laws/${lawId}`,
+      `${apiConfig.backendUrl}/api/content/laws/${lawId}`,
       {
         method: "PUT",
         headers: {

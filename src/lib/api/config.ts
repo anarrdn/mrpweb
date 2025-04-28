@@ -1,5 +1,5 @@
-export const config = {
-  backendUrl: "http://localhost:8000",
+export const apiConfig = {
+  backendUrl: "http://192.168.88.93:8000",
   apiVersion: "v1",
   timeout: 10000, // 10 seconds
   authTokenKey: "auth_token",
@@ -7,47 +7,54 @@ export const config = {
 
 export const endpoints = {
   auth: {
-    login: "/api/login",
-    register: "/api/register",
-    profile: "/api/profile",
-    logout: "/api/logout",
+    login: "/login",
+    register: "/register",
+    profile: "/profile",
+    logout: "/logout",
     admin: {
-      login: "/api/admin/login",
-      register: "/api/admin/register",
-      profile: "/api/admin/profile",
-      logout: "/api/admin/logout",
-    }
+      login: "/admin/login",
+      register: "/admin/register",
+      profile: "/admin/profile",
+      logout: "/admin/logout",
+    },
   },
   users: {
-    profile: "/api/users/profile",
-    updateProfile: "/api/users/profile",
+    profile: "/profile",
+    updateProfile: "/profile",
   },
   posts: {
-    list: "/api/posts",
-    get: (id: string) => `/api/posts/${id}`,
+    list: "/posts",
+    get: (id: string) => `/posts/${id}`,
   },
   menus: {
-    list: "/api/menus",
+    list: "/menus",
   },
   settings: {
-    get: "/api/settings",
+    get: "/settings",
   },
   footer: {
-    get: "/api/footer",
+    get: "/footer",
   },
   content: {
-    get: "/api/content",
-    update: "/api/content",
-    updateLaw: (lawId: string) => `/api/content/laws/${lawId}`,
+    get: "/content",
+    update: "/content",
+    updateLaw: (lawId: string) => `/content/laws/${lawId}`,
   },
   advertisements: {
-    list: "/api/advertisements",
-    create: "/api/advertisements",
-    my: "/api/advertisements/my",
-    update: (id: string) => `/api/advertisements/my/${id}`,
-    delete: (id: string) => `/api/advertisements/my/${id}`,
+    list: "/advertisements",
+    create: "/advertisements",
+    my: "/advertisements/my",
+    update: (id: string) => `/advertisements/my/${id}`,
+    delete: (id: string) => `/advertisements/my/${id}`,
   },
   adCategories: {
-    list: "/api/ad-categories",
+    list: "/ad-categories",
   },
-}; 
+  notifications: {
+    list: "/api/notifications",
+    create: "/api/notifications",
+    unreadCount: "/api/notifications/unread/count",
+    delete: (id: string) => `/api/notifications/${id}`,
+    markRead: (id: string) => `/api/notifications/${id}/read`,
+  },
+};

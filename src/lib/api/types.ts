@@ -1,16 +1,20 @@
 export interface User {
-  id: number;
+  id: string;
   email: string;
   name: string;
+  username: string;
+  isAdmin: boolean;
+  pharmacyName?: string;
+  phoneNumber?: string;
+  address?: string;
+  isApproved?: boolean;
+  paymentProof?: string;
   role: string;
   status: string;
-  isApproved: boolean;
   createdAt: string;
   updatedAt: string;
-  pharmacyName?: string;
   pharmacyRegisterNumber?: string;
   pharmacyAddress?: string;
-  phoneNumber?: string;
 }
 
 export interface Post {
@@ -42,13 +46,59 @@ export interface Settings {
   };
 }
 
+export interface FooterSection {
+  id: string;
+  title: string;
+  mapImage?: string | null;
+  address?: string;
+  phone?: string;
+  email?: string;
+  socialLinks?: {
+    platform: string;
+    url: string;
+  }[];
+  copyright?: string;
+  links?: {
+    text: string;
+    url: string;
+  }[];
+}
+
 export interface Footer {
-  sections: {
-    title: string;
-    links: {
-      text: string;
-      url: string;
-    }[];
+  sections: FooterSection[];
+}
+
+export interface FooterCreateRequest {
+  title: string;
+  mapImage?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  socialLinks?: {
+    platform: string;
+    url: string;
+  }[];
+  copyright?: string;
+  links?: {
+    text: string;
+    url: string;
+  }[];
+}
+
+export interface FooterUpdateRequest {
+  title?: string;
+  mapImage?: string;
+  address?: string;
+  phone?: string;
+  email?: string;
+  socialLinks?: {
+    platform: string;
+    url: string;
+  }[];
+  copyright?: string;
+  links?: {
+    text: string;
+    url: string;
   }[];
 }
 
@@ -97,11 +147,11 @@ export interface RegisterRequest {
   password: string;
   name: string;
   username: string;
-  pharmacyName: string;
+  pharmacy_name: string;
+  pharmacy_register_number: string;
+  pharmacy_address: string;
+  phone_number: number;
   payment_proof: string;
-  pharmacyRegisterNumber: string;
-  pharmacyAddress: string;
-  phoneNumber: string;
 }
 
 export interface AuthResponse {
@@ -130,19 +180,63 @@ export interface ErrorResponse {
 
 export interface Content {
   hero?: {
-    title?: string;
-    subtitle?: string;
-    backgroundImage?: string | null;
-    description?: string;
-    image?: string | null;
-    pdf?: string | null;
-    link?: string | null;
-    youtube?: string | null;
+    title: string;
+    subtitle: string;
+    backgroundImage: string | null;
   };
-  landing?: {
-    backgroundImage?: string | null;
-  };
-  // Add other sections as needed
+  links?: Record<
+    string,
+    {
+      title: string;
+      description: string;
+      websiteLink: string;
+    }
+  >;
+  laws?: Record<
+    string,
+    {
+      title: string;
+      description: string;
+      content: string;
+      category: string;
+    }
+  >;
+  documents?: Record<
+    string,
+    {
+      title: string;
+      description: string;
+      fileUrl: string;
+      category: string;
+    }
+  >;
+  media?: Record<
+    string,
+    {
+      title: string;
+      description: string;
+      fileUrl: string;
+      type: string;
+    }
+  >;
+  news?: Record<
+    string,
+    {
+      title: string;
+      content: string;
+      imageUrl: string;
+      category: string;
+      date: string;
+    }
+  >;
+}
+
+export interface Notification {
+  id: string;
+  title: string;
+  message: string;
+  createdAt: string;
+  read: boolean;
 }
 
 export class ApiError extends Error {
@@ -155,6 +249,6 @@ export class ApiError extends Error {
     super(message);
     // Set the prototype explicitly
     Object.setPrototypeOf(this, ApiError.prototype);
-    this.name = 'ApiError';
+    this.name = "ApiError";
   }
-} 
+}

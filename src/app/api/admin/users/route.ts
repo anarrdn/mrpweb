@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { config } from "@/lib/config";
+import { apiConfig } from "@/lib/api/config";
 
 export async function GET(request: Request) {
   try {
@@ -12,7 +12,7 @@ export async function GET(request: Request) {
       );
     }
 
-    const response = await fetch(`${config.backendUrl}/admin/users`, {
+    const response = await fetch(`${apiConfig.backendUrl}/admin/users`, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

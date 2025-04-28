@@ -1,4 +1,4 @@
-import { config as apiConfig } from './api/config';
+import { apiConfig } from "./api/config";
 
 export const MENU = [
   {
@@ -27,9 +27,4 @@ export const MENU = [
   },
 ];
 
-export const config = {
-  backendUrl: apiConfig.backendUrl,
-  apiVersion: apiConfig.apiVersion,
-  timeout: apiConfig.timeout,
-  authTokenKey: apiConfig.authTokenKey,
-};
+export const config = apiConfig;

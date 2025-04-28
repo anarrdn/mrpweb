@@ -10,14 +10,24 @@ import { apiClient } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
 import { Bell, LogIn, UserPlus } from "lucide-react";
+import { EditButton } from "@/components/ui/edit-button";
+import { Notification, Content } from "@/lib/api/types";
+
+interface LandingContent {
+  backgroundImage?: string | null;
+}
 
 export default function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [landing, setLanding] = useState<{ backgroundImage?: string | null }>({ backgroundImage: null });
-  const [contentError, setContentError] = useState<string | null>(null);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+  const [landing, setLanding] = useState<LandingContent>({
+    backgroundImage: null,
+  });
   const { user, isAuthenticated, logout, register } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === "admin";
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
 
   // Close AuthModal when authenticated
   useEffect(() => {
@@ -28,13 +38,13 @@ export default function LandingPage() {
 
   const fetchContent = useCallback(async () => {
     try {
-      setContentError(null);
       const response = await apiClient.getContent();
-      if ('landing' in response && response.landing) {
-        setLanding((response as any).landing);
+      const content = response as unknown as Content;
+      if (content && "landing" in content && content.landing) {
+        setLanding(content.landing as LandingContent);
       }
     } catch (error) {
-      setContentError("Failed to fetch content");
+      // Silently handle the error without setting any state
     }
   }, []);
 
@@ -51,20 +61,22 @@ export default function LandingPage() {
 
   const handleSave = async (updatedData: Record<string, any>) => {
     try {
-      setContentError(null);
       // Convert File to base64 if it's a file upload
       if (updatedData.backgroundImage instanceof File) {
         const base64Image = await fileToBase64(updatedData.backgroundImage);
         updatedData.backgroundImage = base64Image;
       }
-      
+
       const response = await apiClient.updateContent("landing", updatedData);
-      if ('landing' in response && response.landing) {
-        setLanding((response as any).landing);
+      const content = response as unknown as Content;
+      if (content && "landing" in content && content.landing) {
+        setLanding(content.landing as LandingContent);
+      } else {
+        setLanding({ backgroundImage: null });
       }
       setIsEditModalOpen(false);
     } catch (error) {
-      setContentError("Failed to save content");
+      console.error("Failed to save content:", error);
     }
   };
 
@@ -81,36 +93,68 @@ export default function LandingPage() {
   }
 
   // Wrapper for registration to convert FormData to object
-  const handleRegister = async (formData: FormData) => {
-    const data: any = {};
-    for (const [key, value] of formData.entries()) {
-      if (key === 'payment_proof' && value instanceof File && value.size > 0) {
-        data[key] = await fileToBase64(value);
-      } else if (key !== 'username') {
-        data[key] = value;
-      }
-    }
-    await register(data);
+  const handleRegister = async (data: {
+    email: string;
+    password: string;
+    name: string;
+    username: string;
+    pharmacy_name: string;
+    pharmacy_register_number: string;
+    pharmacy_address: string;
+    phone_number: number;
+    payment_proof: string;
+  }) => {
+    const transformedData = {
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      username: data.username,
+      pharmacyName: data.pharmacy_name,
+      pharmacyRegisterNumber: data.pharmacy_register_number,
+      pharmacyAddress: data.pharmacy_address,
+      phoneNumber: data.phone_number.toString(),
+      payment_proof: data.payment_proof,
+    };
+    await register(transformedData);
   };
+
+  const fetchNotifications = useCallback(async () => {
+    setIsLoadingNotifications(true);
+    try {
+      const data = await apiClient.getNotifications();
+      setNotifications(data);
+    } catch (error) {
+      setNotifications([]);
+    } finally {
+      setIsLoadingNotifications(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isNotificationOpen) {
+      fetchNotifications();
+    }
+  }, [isNotificationOpen, fetchNotifications]);
 
   return (
     <div className="min-h-screen bg-white relative">
+      {/* Edit Button */}
+      <EditButton onClick={() => setIsEditModalOpen(true)} />
+
       {/* Navigation */}
       <div className="fixed top-0 right-0 p-4 z-50 flex gap-4">
-        {isAdmin && (
-          <Button
-            onClick={() => setIsEditModalOpen(true)}
-            variant="outline"
-            className="bg-white/20 backdrop-blur-sm"
-          >
-            Edit Page
-          </Button>
-        )}
+        <Button
+          onClick={() => setIsNotificationOpen(true)}
+          variant="ghost"
+          className="text-white hover:text-gray-200 hover:bg-transparent underline"
+        >
+          Мэдэгдэл
+        </Button>
         {isAuthenticated ? (
           <Button
             onClick={logout}
             variant="ghost"
-            className="text-gray-800 hover:text-gray-600 hover:bg-transparent underline"
+            className="text-white hover:text-gray-200 hover:bg-transparent underline"
           >
             Гарах
           </Button>
@@ -119,21 +163,14 @@ export default function LandingPage() {
             <Button
               onClick={() => setIsAuthModalOpen(true)}
               variant="ghost"
-              className="text-gray-800 hover:text-gray-600 hover:bg-transparent underline"
-            >
-              Мэдэгдэл
-            </Button>
-            <Button
-              onClick={() => setIsAuthModalOpen(true)}
-              variant="ghost"
-              className="text-gray-800 hover:text-gray-600 hover:bg-transparent underline"
+              className="text-white hover:text-gray-200 hover:bg-transparent underline"
             >
               Нэвтрэх
             </Button>
             <Button
               onClick={() => setIsAuthModalOpen(true)}
               variant="ghost"
-              className="text-gray-800 hover:text-gray-600 hover:bg-transparent underline"
+              className="text-white hover:text-gray-200 hover:bg-transparent underline"
             >
               Бүртгүүлэх
             </Button>
@@ -141,53 +178,90 @@ export default function LandingPage() {
         )}
       </div>
 
-      {/* Background Image - Only show if admin has uploaded one */}
-      {imageUrl && (
-        <div className="absolute inset-0 z-0">
-          <Image
-            src={imageUrl}
-            alt=""
-            fill
-            className="object-cover"
-            priority
-          />
-          <div className="absolute inset-0 bg-black/30" />
+      {/* Notification Modal */}
+      {isNotificationOpen && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md relative">
+            <button
+              className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+              onClick={() => setIsNotificationOpen(false)}
+            >
+              ×
+            </button>
+            <h2 className="text-lg font-bold mb-4">Мэдэгдэл</h2>
+            {isLoadingNotifications ? (
+              <div>Уншиж байна...</div>
+            ) : notifications.length === 0 ? (
+              <div>Мэдэгдэл алга</div>
+            ) : (
+              <ul className="space-y-2 max-h-80 overflow-y-auto">
+                {notifications.map((n) => (
+                  <li
+                    key={n.id}
+                    className={`bg-gray-100 rounded p-2 ${
+                      !n.read ? "font-bold" : ""
+                    }`}
+                  >
+                    <div className="text-sm text-gray-800">{n.title}</div>
+                    <div className="text-xs text-gray-600 mb-1">
+                      {new Date(n.createdAt).toLocaleString()}
+                    </div>
+                    <div className="text-sm text-gray-700">{n.message}</div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       )}
 
+      {/* Background Image - Always show the medicine image */}
+      <div className="absolute inset-0 z-0">
+        <Image
+          src="/branding/consultation.jpg"
+          alt="Background"
+          fill
+          className="object-cover"
+          priority
+        />
+        <div className="absolute inset-0 bg-black/30" />
+      </div>
+
       {/* Main Content */}
-      <div className={`min-h-screen flex flex-col items-center justify-center px-4 relative z-10 ${imageUrl ? 'text-white' : 'text-gray-800'}`}>
+      <div
+        className={`min-h-screen flex flex-col items-center justify-start pt-20 px-4 relative z-10 text-white`}
+      >
         {/* Logo and Title */}
-        <div className="text-center mb-12">
-          <div className="w-32 h-32 mx-auto mb-6 relative">
-            <Image src="/branding/logo.png" alt="Logo" fill className="object-contain" />
+        <div className="text-center mb-8">
+          <div className="w-32 h-32 mx-auto mb-4 relative">
+            <Image
+              src="/branding/mrp.png"
+              alt="Logo"
+              fill
+              className="object-contain"
+            />
           </div>
-          <h1 className="text-4xl font-bold mb-4">
+          <h1 className="text-4xl font-bold mb-2">
             МОНГОЛЫН ЭМ ХАНГАМЖИЙН ШИНЭЧЛЭЛ ХОЛБОО
           </h1>
           <p className="text-lg max-w-3xl mx-auto">
             НИЙТИЙН ҮЙЛЧИЛГЭЭТЭЙ ЭМИЙН САНГУУДЫН НЭГДСЭН ГИШҮҮДДЭЭ ҮЙЛЧИЛДЭГ
             ТӨРИЙН БУС БАЙГУУЛЛАГА
           </p>
-          {contentError && (
-            <p className="text-red-500 bg-white/10 px-4 py-2 rounded absolute bottom-4 left-1/2 transform -translate-x-1/2">
-              {contentError}
-            </p>
-          )}
         </div>
-
         {/* Service Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6 mx-auto w-full max-w-6xl">
+        <div className="grid grid-cols-5 gap-6 mx-auto w-full max-w-6xl mt-8">
           <Link
             href="/main"
             className="bg-white/10 backdrop-blur-md rounded-lg p-6 text-center hover:bg-white/20 transition-all transform hover:-translate-y-1 border border-white/20"
           >
             <div className="w-16 h-16 mx-auto mb-4 bg-white/30 rounded-full flex items-center justify-center">
               <svg
-                className="w-8 h-8"
+                className="w-8 h-8 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
@@ -197,7 +271,7 @@ export default function LandingPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold mb-2">ЦАХИМ ХУУДАС</h3>
+            <h3 className="text-lg font-semibold">Цахим хуудас</h3>
           </Link>
 
           <Link
@@ -206,10 +280,11 @@ export default function LandingPage() {
           >
             <div className="w-16 h-16 mx-auto mb-4 bg-white/30 rounded-full flex items-center justify-center">
               <svg
-                className="w-8 h-8"
+                className="w-8 h-8 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
@@ -219,7 +294,7 @@ export default function LandingPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold mb-2">ХУГАЦААТ ТӨЛӨВЛӨГӨӨ</h3>
+            <h3 className="text-lg font-semibold">ХУГАЦААТ ТӨЛӨВЛӨГӨӨ</h3>
           </Link>
 
           <Link
@@ -228,10 +303,11 @@ export default function LandingPage() {
           >
             <div className="w-16 h-16 mx-auto mb-4 bg-white/30 rounded-full flex items-center justify-center">
               <svg
-                className="w-8 h-8"
+                className="w-8 h-8 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
@@ -241,7 +317,7 @@ export default function LandingPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold mb-2">ЗАР МЭДЭЭ</h3>
+            <h3 className="text-lg font-semibold">ЗАР МЭДЭЭ</h3>
           </Link>
 
           <Link
@@ -250,10 +326,11 @@ export default function LandingPage() {
           >
             <div className="w-16 h-16 mx-auto mb-4 bg-white/30 rounded-full flex items-center justify-center">
               <svg
-                className="w-8 h-8"
+                className="w-8 h-8 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
@@ -263,7 +340,7 @@ export default function LandingPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold mb-2">ШИЛЭН ДАНС</h3>
+            <h3 className="text-lg font-semibold">ШИЛЭН ДАНС</h3>
           </Link>
 
           <Button
@@ -273,10 +350,11 @@ export default function LandingPage() {
           >
             <div className="w-16 h-16 mx-auto mb-4 bg-white/30 rounded-full flex items-center justify-center">
               <svg
-                className="w-8 h-8"
+                className="w-10 h-10 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
@@ -286,8 +364,8 @@ export default function LandingPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold mb-2">
-              {isAuthenticated ? 'Гарах' : 'Нэвтрэх Бүртгүүлэх'}
+            <h3 className="text-lg font-semibold">
+              {isAuthenticated ? "Гарах" : "Нэвтрэх Бүртгүүлэх"}
             </h3>
           </Button>
         </div>
@@ -300,7 +378,7 @@ export default function LandingPage() {
         onRegister={handleRegister}
       />
 
-      {/* Dynamic Editing Modal - Always present for admin users */}
+      {/* Dynamic Editing Modal */}
       {isAdmin && (
         <DynamicEditModal
           isOpen={isEditModalOpen}

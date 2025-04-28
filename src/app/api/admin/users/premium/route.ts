@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { config } from "@/lib/config";
+import { apiConfig } from "@/lib/api/config";
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const response = await fetch(`${config.backendUrl}/admin/users/premium`, {
+    const response = await fetch(`${apiConfig.backendUrl}/admin/users/premium`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

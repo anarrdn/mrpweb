@@ -270,7 +270,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const fetchContent = async () => {
     try {
       const response = await apiClient.getContent();
-      setContent(response.data as Content);
+      setContent(response as Content);
     } catch (error) {
       console.error("Error fetching content:", error);
       toast.error("Failed to load content");
@@ -285,7 +285,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   ) => {
     try {
       const response = await apiClient.updateContent(section, data);
-      setContent(response.data as Content);
+      setContent(response as Content);
       toast.success("Content updated successfully");
     } catch (error) {
       console.error("Error updating content:", error);
@@ -297,7 +297,7 @@ export function ContentProvider({ children }: { children: ReactNode }) {
   const updateLawSection = async (lawId: string, data: Partial<LawItem>) => {
     try {
       const response = await apiClient.updateLawContent(lawId, data);
-      setContent(response.data as Content);
+      setContent(response as Content);
       toast.success("Law section updated successfully");
     } catch (error) {
       console.error("Error updating law section:", error);
