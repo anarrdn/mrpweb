@@ -13,7 +13,7 @@ export default function ClientLayout({
   return (
     <AuthProvider>
       <LayoutWrapper>{children}</LayoutWrapper>
-      <Footer />
+
     </AuthProvider>
   );
 }

@@ -23,6 +23,7 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
 .env*
@@ -119,3 +120,42 @@ public/images/2.png
 public/images/1.png
 public/branding/footer.png
 public/branding/consultation.jpg
+
+# Node modules
+node_modules/
+
+# Build output
+.next/
+out/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Env files
+.env
+.env.*
+
+# Editor directories and files
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Test coverage
+coverage/
+
+# Misc
+*.local
+*.log
+
+# Optional: lock files (if you want to avoid pushing them)
+# package-lock.json
+yarn.lock
+pnpm-lock.yaml

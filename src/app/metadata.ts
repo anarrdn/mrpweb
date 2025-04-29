@@ -1,26 +1,17 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "МРП - Монголын Ромын Пап",
-  description: "Монголын Ромын Пап байгууллагын албан ёсны вэбсайт",
+  title: "MRP Medtech",
+  description: "MRP Medtech",
   openGraph: {
     type: "website",
     images: ["/branding/og.png"],
-    title: "МРП - Монголын Ромын Пап",
-    description: "Монголын Ромын Пап байгууллагын албан ёсны вэбсайт",
-    siteName: "МРП - Монголын Ромын Пап",
+    title: "MRP Medtech",
+    description: "MRP Medtech",
+    siteName: "MRP Medtech",
   },
   robots: { index: true, follow: true },
   keywords: [
     "МРП",
-    "Монголын Ромын Пап",
-    "Ромын Пап",
-    "Католик",
-    "Католик шашин",
-    "Католик сүм",
-    "Католик шашны байгууллага",
-    "Католик шашны үйлчилгээ",
-    "Католик шашны төв",
-    "Католик шашны албан ёсны вэбсайт",
   ],
 };

@@ -7,7 +7,7 @@ import { Toaster } from "sonner";
 import ClientLayout from "@/components/ClientLayout";
 import { useEffect, useState } from "react";
 import { apiClient } from "@/lib/api/client";
-import Head from "next/head";
+import { usePathname } from "next/navigation";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -16,10 +16,11 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const [siteTitle, setSiteTitle] = useState("МРП - Монголын Ромын Пап");
+  const [siteTitle, setSiteTitle] = useState("MRP Medtech");
   const [siteDescription, setSiteDescription] = useState(
     "Монголын Ромын Пап байгууллагын албан ёсны вэбсайт"
   );
+  const pathname = usePathname();
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -69,7 +70,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ClientLayout>
           {children}
-          <Footer />
+          {pathname !== "/" && pathname !== "/login" && pathname !== "/register" && <Footer />}
         </ClientLayout>
         <Toaster />
       </body>

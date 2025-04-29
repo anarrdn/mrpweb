@@ -35,13 +35,10 @@ export default function Hero({ content }: HeroProps) {
         />
       )}
       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-        <div className="text-center text-white max-w-3xl px-4">
-          <h1 className="text-5xl md:text-6xl font-bold mb-6">
-            {content?.title || "Welcome to Medtech MRP"}
+        <div className="text-center text-white w-full px-4">
+          <h1 className="text-4xl md:text-5xl font-bold whitespace-nowrap mx-auto">
+            {content?.title || "МОНГОЛЫН ЭМ ХАНГАМЖИЙН ШИНЭЧЛЭЛ ХОЛБОО"}
           </h1>
-          <p className="text-xl md:text-2xl">
-            {content?.subtitle || "Your Medical Resource Planning Solution"}
-          </p>
         </div>
       </div>
     </div>
