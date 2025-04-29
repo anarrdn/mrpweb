@@ -1,19 +1,14 @@
 "use client";
 
 import { useContent } from "@/lib/content/content.context";
-import { EditButton } from "@/components/ui/edit-button";
-import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
-import { useState } from "react";
 
 export default function LinksPage() {
-  const { content, updateContent } = useContent();
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const { content } = useContent();
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">Links</h1>
-        <EditButton onClick={() => setIsEditModalOpen(true)} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -30,17 +25,6 @@ export default function LinksPage() {
           </a>
         ))}
       </div>
-
-      <DynamicEditModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        title="Edit Links"
-        initialData={content.links}
-        onSave={(updatedData) => {
-          updateContent("links", updatedData);
-          setIsEditModalOpen(false);
-        }}
-      />
     </div>
   );
 }

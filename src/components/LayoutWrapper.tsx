@@ -11,10 +11,11 @@ export default function LayoutWrapper({
 }) {
   const pathname = usePathname();
   const isLandingPage = pathname === "/" || pathname === "/landing";
+  const isAdminPage = pathname?.startsWith("/admin");
 
   return (
     <>
-      {!isLandingPage && <Header />}
+      {!isLandingPage && !isAdminPage && <Header />}
       <main className="flex-1 min-h-[calc(100vh-4rem)]">{children}</main>
     </>
   );

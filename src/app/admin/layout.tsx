@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth/auth.context";
 import {
   LayoutDashboard,
@@ -27,64 +27,154 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const { isAdmin, logout } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const isLoginPage = pathname === "/admin/login";
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
 
-  if (!isAdmin) {
-    router.push("/login");
+  if (!isAdmin && !isLoginPage) {
+    router.push("/admin/login");
     return null;
+  }
+
+  if (isLoginPage) {
+    return children;
   }
 
   const menuItems = [
     {
-      title: "Dashboard",
-      icon: LayoutDashboard,
-      href: "/admin/dashboard",
-    },
-    {
       title: "News",
       icon: Newspaper,
-      href: "/admin/news",
+      submenus: [
+        {
+          title: "All News",
+          href: "/admin/news",
+        },
+        {
+          title: "Add News",
+          href: "/admin/news/add",
+        },
+        {
+          title: "Categories",
+          href: "/admin/news/categories",
+        },
+      ],
     },
     {
       title: "Links",
       icon: Link2,
-      href: "/admin/links",
+      submenus: [
+        {
+          title: "All Links",
+          href: "/admin/links",
+        },
+        {
+          title: "Add Link",
+          href: "/admin/links/add",
+        },
+        {
+          title: "Categories",
+          href: "/admin/links/categories",
+        },
+      ],
     },
     {
       title: "Laws",
       icon: BookOpen,
-      href: "/admin/laws",
-    },
-    {
-      title: "Menus",
-      icon: Menu,
-      href: "/admin/menus",
+      submenus: [
+        {
+          title: "All Laws",
+          href: "/admin/laws",
+        },
+        {
+          title: "Add Law",
+          href: "/admin/laws/add",
+        },
+        {
+          title: "Categories",
+          href: "/admin/laws/categories",
+        },
+      ],
     },
     {
       title: "Documents",
       icon: FileText,
-      href: "/admin/documents",
+      submenus: [
+        {
+          title: "All Documents",
+          href: "/admin/documents",
+        },
+        {
+          title: "Add Document",
+          href: "/admin/documents/add",
+        },
+        {
+          title: "Categories",
+          href: "/admin/documents/categories",
+        },
+      ],
     },
     {
       title: "Media",
       icon: Image,
-      href: "/admin/media",
+      submenus: [
+        {
+          title: "All Media",
+          href: "/admin/media",
+        },
+        {
+          title: "Add Media",
+          href: "/admin/media/add",
+        },
+        {
+          title: "Categories",
+          href: "/admin/media/categories",
+        },
+      ],
     },
     {
       title: "Users",
       icon: Users,
-      href: "/admin/users",
-    },
-    {
-      title: "Surveys",
-      icon: ClipboardList,
-      href: "/admin/surveys",
+      submenus: [
+        {
+          title: "All Users",
+          href: "/admin/users",
+        },
+        {
+          title: "Add User",
+          href: "/admin/users/add",
+        },
+        {
+          title: "Roles",
+          href: "/admin/users/roles",
+        },
+      ],
     },
     {
       title: "Settings",
       icon: Settings,
-      href: "/admin/settings",
+      submenus: [
+        {
+          title: "General",
+          href: "/admin/settings",
+        },
+        {
+          title: "Menus",
+          href: "/admin/settings/menus",
+        },
+        {
+          title: "Surveys",
+          href: "/admin/settings/surveys",
+        },
+      ],
     },
   ];
+
+  const toggleMenu = (title: string) => {
+    setOpenMenus((prev) => ({
+      ...prev,
+      [title]: !prev[title],
+    }));
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -99,24 +189,42 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
           <div className="p-4 border-b">
             <h1 className="text-xl font-bold">Admin Panel</h1>
           </div>
-          <nav className="flex-1 p-4 space-y-2">
+          <nav className="flex-1 p-4 space-y-1">
             {menuItems.map((item) => (
-              <Button
-                key={item.href}
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => router.push(item.href)}
-              >
-                <item.icon className="w-4 h-4 mr-2" />
-                {item.title}
-              </Button>
+              <div key={item.title} className="space-y-1">
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => toggleMenu(item.title)}
+                >
+                  <item.icon className="w-4 h-4 mr-2" />
+                  {item.title}
+                </Button>
+                {openMenus[item.title] && (
+                  <div className="pl-8 space-y-1">
+                    {item.submenus?.map((submenu) => (
+                      <Button
+                        key={submenu.href}
+                        variant="ghost"
+                        className="w-full justify-start text-sm"
+                        onClick={() => router.push(submenu.href)}
+                      >
+                        {submenu.title}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
             ))}
           </nav>
           <div className="p-4 border-t">
             <Button
               variant="ghost"
               className="w-full justify-start text-red-500"
-              onClick={logout}
+              onClick={() => {
+                logout();
+                router.push("/");
+              }}
             >
               <LogOut className="w-4 h-4 mr-2" />
               Logout
@@ -127,16 +235,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
-        <div className="p-4">
-          <Button
-            variant="ghost"
-            className="mb-4"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          >
-            <Menu className="w-4 h-4" />
-          </Button>
-          {children}
-        </div>
+        <div className="p-4">{children}</div>
       </div>
     </div>
   );

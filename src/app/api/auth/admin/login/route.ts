@@ -13,14 +13,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const response = await fetch(`${apiConfig.backendUrl}/auth/login`, {
+    const response = await fetch(`${apiConfig.backendUrl}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         ...body,
-        isAdmin: true // Forward the admin flag to the backend
+        isAdmin: true, // Forward the admin flag to the backend
       }),
     });
 
@@ -55,9 +55,10 @@ export async function POST(request: Request) {
     console.error("Error logging in as admin:", error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : "Failed to login as admin",
+        error:
+          error instanceof Error ? error.message : "Failed to login as admin",
       },
       { status: 500 }
     );
   }
-} 
+}

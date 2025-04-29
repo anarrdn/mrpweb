@@ -8,9 +8,7 @@ import { useAuth } from "@/lib/auth/auth.context";
 import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
-import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
 import { Bell, LogIn, UserPlus } from "lucide-react";
-import { EditButton } from "@/components/ui/edit-button";
 import { Notification, Content } from "@/lib/api/types";
 
 interface LandingContent {
@@ -19,13 +17,11 @@ interface LandingContent {
 
 export default function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [landing, setLanding] = useState<LandingContent>({
     backgroundImage: null,
   });
   const { user, isAuthenticated, logout, register } = useAuth();
-  const isAdmin = user?.role === "admin";
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoadingNotifications, setIsLoadingNotifications] = useState(false);
 
@@ -58,29 +54,6 @@ export default function LandingPage() {
     if (!url.startsWith("/") && !url.startsWith("http")) return `/${url}`;
     return url;
   };
-
-  const handleSave = async (updatedData: Record<string, any>) => {
-    try {
-      // Convert File to base64 if it's a file upload
-      if (updatedData.backgroundImage instanceof File) {
-        const base64Image = await fileToBase64(updatedData.backgroundImage);
-        updatedData.backgroundImage = base64Image;
-      }
-
-      const response = await apiClient.updateContent("landing", updatedData);
-      const content = response as unknown as Content;
-      if (content && "landing" in content && content.landing) {
-        setLanding(content.landing as LandingContent);
-      } else {
-        setLanding({ backgroundImage: null });
-      }
-      setIsEditModalOpen(false);
-    } catch (error) {
-      console.error("Failed to save content:", error);
-    }
-  };
-
-  const imageUrl = getValidImageUrl(landing.backgroundImage);
 
   // Helper to convert File to base64
   function fileToBase64(file: File): Promise<string> {
@@ -138,9 +111,6 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-white relative">
-      {/* Edit Button */}
-      <EditButton onClick={() => setIsEditModalOpen(true)} />
-
       {/* Navigation */}
       <div className="fixed top-0 right-0 p-4 z-50 flex gap-4">
         <Button
@@ -377,17 +347,6 @@ export default function LandingPage() {
         onClose={() => setIsAuthModalOpen(false)}
         onRegister={handleRegister}
       />
-
-      {/* Dynamic Editing Modal */}
-      {isAdmin && (
-        <DynamicEditModal
-          isOpen={isEditModalOpen}
-          onClose={() => setIsEditModalOpen(false)}
-          title="Edit Landing Page"
-          initialData={landing}
-          onSave={handleSave}
-        />
-      )}
     </div>
   );
 }

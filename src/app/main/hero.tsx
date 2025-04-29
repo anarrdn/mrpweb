@@ -4,13 +4,10 @@ import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { apiClient } from "@/lib/api/client";
 import { Content } from "@/lib/api/types";
-import { DynamicEditModal } from "@/components/ui/dynamic-edit-modal";
-import { EditButton } from "@/components/ui/edit-button";
 
 export default function Hero() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [content, setContent] = useState<Record<string, any>>({
     title: "Welcome to Medtech MRP",
     subtitle: "Your Medical Resource Planning Solution",
@@ -42,17 +39,6 @@ export default function Hero() {
     fetchContent();
   }, [fetchContent]);
 
-  const handleSave = async (data: Record<string, any>) => {
-    try {
-      await apiClient.updateContent("hero", data);
-      setContent(data);
-      setIsEditModalOpen(false);
-    } catch (error) {
-      console.error("Failed to update hero content:", error);
-      setError("Failed to update content");
-    }
-  };
-
   const getValidImageUrl = (url: string | null) => {
     if (!url) return null;
     if (url.startsWith("data:image")) return url;
@@ -64,7 +50,6 @@ export default function Hero() {
 
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-white">
-      <EditButton onClick={() => setIsEditModalOpen(true)} />
       <div className="absolute inset-0 z-0">
         <Image
           src="/branding/consultation.jpg"
@@ -84,14 +69,6 @@ export default function Hero() {
           {content?.subtitle || "Your Medical Resource Planning Solution"}
         </p>
       </div>
-
-      <DynamicEditModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        title="Edit Hero Section"
-        initialData={content}
-        onSave={handleSave}
-      />
     </section>
   );
 }

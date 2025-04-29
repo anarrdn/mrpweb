@@ -10,7 +10,7 @@ export async function POST(request: Request) {
     const { email, password } = body;
 
     // Call your actual backend API (use /api/login instead of /login)
-    const response = await fetch(`${API_URL}/api/login`, {
+    const response = await fetch(`${API_URL}/api/admin/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

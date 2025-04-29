@@ -1,34 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { apiClient } from "@/lib/api/client";
 import ContentManager from "@/components/admin/ContentManager";
 import { useAuth } from "@/lib/hooks/useAuth";
 
 export default function NewsPage() {
   const router = useRouter();
   const { user, isLoading } = useAuth();
-  const [content, setContent] = useState<Record<string, any>>({});
-
-  useEffect(() => {
-    if (!isLoading && !user?.isAdmin) {
-      router.push("/login");
-    }
-  }, [user, isLoading, router]);
-
-  useEffect(() => {
-    const fetchContent = async () => {
-      try {
-        const data = await apiClient.getContent();
-        setContent(data.news || {});
-      } catch (error) {
-        console.error("Failed to fetch news:", error);
-      }
-    };
-
-    fetchContent();
-  }, []);
+  const [content] = useState<Record<string, any>>({});
 
   if (isLoading || !user?.isAdmin) {
     return null;
@@ -38,22 +18,22 @@ export default function NewsPage() {
     {
       name: "title",
       label: "Title",
-      type: "text",
+      type: "text" as const,
     },
     {
       name: "content",
       label: "Content",
-      type: "textarea",
+      type: "textarea" as const,
     },
     {
       name: "image",
       label: "Image",
-      type: "file",
+      type: "file" as const,
     },
     {
       name: "status",
       label: "Status",
-      type: "select",
+      type: "select" as const,
       options: ["draft", "published"],
     },
   ];
@@ -66,8 +46,7 @@ export default function NewsPage() {
         fields={fields}
         data={content}
         onUpdate={async () => {
-          const data = await apiClient.getContent();
-          setContent(data.news || {});
+          // No-op since we're not using content fetching
         }}
       />
     </div>

@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const response = await fetch(`${apiConfig.backendUrl}/auth/login`, {
+    const response = await fetch(`${apiConfig.backendUrl}/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

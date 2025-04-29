@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { jwtVerify } from "jose";
 
 // Define public paths that don't require authentication
 const PUBLIC_PATHS = [
@@ -29,6 +30,7 @@ const PUBLIC_PATHS = [
   "/api/notifications",
   "/api/upload",
   "/api/profile",
+  "/admin/login",
 ];
 
 // Define admin paths that require admin access
@@ -39,7 +41,6 @@ const ADMIN_PATHS = [
   "/admin/ad-categories",
   "/admin/advertisements",
   "/admin/banners",
-  "/admin/login",
   "/admin/password-reset",
   "/admin/password-reset-request",
   "/admin/register",
@@ -75,6 +76,37 @@ export async function middleware(request: NextRequest) {
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("from", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // If we have a token, verify it and check admin role for admin paths
+  if (token) {
+    try {
+      const secret = new TextEncoder().encode(
+        process.env.JWT_SECRET || "your-secret-key"
+      );
+      const { payload } = await jwtVerify(token, secret);
+
+      // If it's an admin path, verify the user is an admin
+      if (isAdminPath && payload.role !== "admin") {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+
+      // Add user info to headers for downstream use
+      const requestHeaders = new Headers(request.headers);
+      requestHeaders.set("x-user-id", payload.user_id);
+      requestHeaders.set("x-user-role", payload.role);
+
+      return NextResponse.next({
+        headers: requestHeaders,
+      });
+    } catch (error) {
+      // Clear invalid token
+      const response = NextResponse.redirect(
+        new URL("/auth/login", request.url)
+      );
+      response.cookies.delete("token");
+      return response;
+    }
   }
 
   // For all other cases, just pass through

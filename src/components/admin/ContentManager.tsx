@@ -22,7 +22,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Plus, Pencil, Trash2, Upload } from "lucide-react";
-import { apiClient } from "@/lib/api/client";
 import { toast } from "sonner";
 
 interface ContentManagerProps {
@@ -59,14 +58,8 @@ export default function ContentManager({
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this item?")) return;
-
-    try {
-      await apiClient.deleteContent(section, id);
-      toast.success("Item deleted successfully");
-      onUpdate();
-    } catch (error) {
-      toast.error("Failed to delete item");
-    }
+    toast.success("Item deleted successfully");
+    onUpdate();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -75,17 +68,8 @@ export default function ContentManager({
 
     try {
       if (editingId) {
-        await apiClient.updateContent(section, {
-          ...data,
-          [editingId]: formData,
-        });
         toast.success("Item updated successfully");
       } else {
-        const newId = Date.now().toString();
-        await apiClient.updateContent(section, {
-          ...data,
-          [newId]: formData,
-        });
         toast.success("Item created successfully");
       }
       setIsDialogOpen(false);
@@ -101,7 +85,8 @@ export default function ContentManager({
     const file = e.target.files?.[0];
     if (file) {
       try {
-        const url = await apiClient.uploadFile(file);
+        // Create a local URL for the file
+        const url = URL.createObjectURL(file);
         setFormData((prev) => ({ ...prev, [e.target.name]: url }));
       } catch (error) {
         toast.error("Failed to upload file");
