@@ -1,16 +1,27 @@
 "use client";
 
-import { useContent } from "@/lib/content/content.context";
 import Image from "next/image";
 
-export default function Goal() {
-  const { content } = useContent();
+interface GoalProps {
+  content: {
+    title?: string;
+    description?: string;
+    image?: string;
+  };
+}
 
-  const goal = content?.goal || {
+export default function Goal({ content }: GoalProps) {
+  const defaultGoal = {
     title: "Эрхэм зорилго, зорилт",
     description:
       "Манай байгууллагын эрхэм зорилго, зорилтын талаарх мэдээлэл...",
     image: null,
+  };
+
+  const goal = {
+    title: content?.title || defaultGoal.title,
+    description: content?.description || defaultGoal.description,
+    image: content?.image || defaultGoal.image,
   };
 
   return (
@@ -22,25 +33,17 @@ export default function Goal() {
           </h2>
           <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
         </div>
-        <div
-          className={`grid ${
-            goal.image
-              ? "grid-cols-1 md:grid-cols-2"
-              : "grid-cols-1 max-w-3xl mx-auto"
-          } gap-16 items-center`}
-        >
-          <div className="space-y-6">
-            <p className="text-gray-600 leading-relaxed text-lg">
-              {goal.description}
-            </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div className="prose prose-lg">
+            <p className="text-gray-600">{goal.description}</p>
           </div>
           {goal.image && (
-            <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-xl">
+            <div className="relative h-64 md:h-96">
               <Image
                 src={goal.image}
-                alt="Goal"
+                alt={goal.title}
                 fill
-                className="object-cover"
+                className="object-cover rounded-lg"
               />
             </div>
           )}

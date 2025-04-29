@@ -1,15 +1,26 @@
 "use client";
 
-import { useContent } from "@/lib/content/content.context";
 import Image from "next/image";
 
-export default function Structure() {
-  const { content } = useContent();
+interface StructureProps {
+  content: {
+    title?: string;
+    description?: string;
+    image?: string;
+  };
+}
 
-  const structure = content?.structure || {
+export default function Structure({ content }: StructureProps) {
+  const defaultStructure = {
     title: "Байгууллагын бүтэц",
     description: "Манай байгууллагын бүтэц...",
     image: null,
+  };
+
+  const structure = {
+    title: content?.title || defaultStructure.title,
+    description: content?.description || defaultStructure.description,
+    image: content?.image || defaultStructure.image,
   };
 
   return (
@@ -21,29 +32,17 @@ export default function Structure() {
           </h2>
           <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
         </div>
-        <div
-          className={`grid ${
-            structure.image
-              ? "grid-cols-1 md:grid-cols-2"
-              : "grid-cols-1 max-w-3xl mx-auto"
-          } gap-16 items-center`}
-        >
-          <div className="space-y-8">
-            <div className="prose prose-lg text-gray-600">
-              {structure.description.split("\n").map((paragraph, index) => (
-                <p key={index} className="mb-6 leading-relaxed">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div className="prose prose-lg">
+            <p className="text-gray-600">{structure.description}</p>
           </div>
           {structure.image && (
-            <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-xl">
+            <div className="relative h-64 md:h-96">
               <Image
                 src={structure.image}
-                alt="Structure"
+                alt={structure.title}
                 fill
-                className="object-cover"
+                className="object-cover rounded-lg"
               />
             </div>
           )}

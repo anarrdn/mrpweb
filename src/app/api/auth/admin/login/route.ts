@@ -13,14 +13,14 @@ export async function POST(request: Request) {
       );
     }
 
-    const response = await fetch(`${apiConfig.backendUrl}/login`, {
+    const response = await fetch(`${apiConfig.backendUrl}/api/admin/login`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         ...body,
-        isAdmin: true, // Forward the admin flag to the backend
+        isAdmin: true,
       }),
     });
 

@@ -4,6 +4,7 @@ export interface User {
   name: string;
   username: string;
   isAdmin: boolean;
+  is_active: boolean;
   pharmacyName?: string;
   phoneNumber?: string;
   address?: string;

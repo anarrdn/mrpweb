@@ -7,15 +7,16 @@ export const apiConfig = {
 
 export const endpoints = {
   auth: {
-    login: "/login",
-    register: "/register",
-    profile: "/profile",
-    logout: "/logout",
+    login: "/api/login",
+    register: "/api/register",
+    profile: "/api/profile",
+    logout: "/api/logout",
     admin: {
-      login: "/admin/login",
-      register: "/admin/register",
-      profile: "/admin/profile",
-      logout: "/admin/logout",
+      login: "/api/admin/login",
+      register: "/api/admin/register",
+      profile: "/api/admin/profile",
+      logout: "/api/admin/logout",
+      users: "/api/admin/users",
     },
   },
   users: {
@@ -56,5 +57,8 @@ export const endpoints = {
     unreadCount: "/api/notifications/unread/count",
     delete: (id: string) => `/api/notifications/${id}`,
     markRead: (id: string) => `/api/notifications/${id}/read`,
+  },
+  upload: {
+    file: "/api/upload",
   },
 };

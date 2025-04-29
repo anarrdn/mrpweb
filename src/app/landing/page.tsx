@@ -9,17 +9,21 @@ import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Bell, LogIn, UserPlus } from "lucide-react";
-import { Notification, Content } from "@/lib/api/types";
+import { Notification } from "@/lib/api/types";
 
-interface LandingContent {
+interface LandingSettings {
   backgroundImage?: string | null;
+  title?: string;
+  subtitle?: string;
 }
 
 export default function LandingPage() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
-  const [landing, setLanding] = useState<LandingContent>({
+  const [landingSettings, setLandingSettings] = useState<LandingSettings>({
     backgroundImage: null,
+    title: "Welcome to Medtech MRP",
+    subtitle: "Your Medical Resource Planning Solution",
   });
   const { user, isAuthenticated, logout, register } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -32,21 +36,28 @@ export default function LandingPage() {
     }
   }, [isAuthenticated, isAuthModalOpen]);
 
-  const fetchContent = useCallback(async () => {
+  const fetchSettings = useCallback(async () => {
     try {
-      const response = await apiClient.getContent();
-      const content = response as unknown as Content;
-      if (content && "landing" in content && content.landing) {
-        setLanding(content.landing as LandingContent);
+      const settings = await apiClient.getSettings();
+      if (settings && Array.isArray(settings)) {
+        const landingSetting = settings.find((s) => s.key === "landing");
+        if (landingSetting) {
+          try {
+            const parsedValue = JSON.parse(landingSetting.value);
+            setLandingSettings(parsedValue);
+          } catch (error) {
+            console.error("Failed to parse landing settings:", error);
+          }
+        }
       }
     } catch (error) {
-      // Silently handle the error without setting any state
+      console.error("Failed to fetch landing settings:", error);
     }
   }, []);
 
   useEffect(() => {
-    fetchContent();
-  }, [fetchContent]);
+    fetchSettings();
+  }, [fetchSettings]);
 
   const getValidImageUrl = (url: string | null | undefined) => {
     if (!url) return null;
@@ -77,18 +88,7 @@ export default function LandingPage() {
     phone_number: number;
     payment_proof: string;
   }) => {
-    const transformedData = {
-      email: data.email,
-      password: data.password,
-      name: data.name,
-      username: data.username,
-      pharmacyName: data.pharmacy_name,
-      pharmacyRegisterNumber: data.pharmacy_register_number,
-      pharmacyAddress: data.pharmacy_address,
-      phoneNumber: data.phone_number.toString(),
-      payment_proof: data.payment_proof,
-    };
-    await register(transformedData);
+    await register(data);
   };
 
   const fetchNotifications = useCallback(async () => {
@@ -211,12 +211,9 @@ export default function LandingPage() {
               className="object-contain"
             />
           </div>
-          <h1 className="text-4xl font-bold mb-2">
-            МОНГОЛЫН ЭМ ХАНГАМЖИЙН ШИНЭЧЛЭЛ ХОЛБОО
-          </h1>
+          <h1 className="text-4xl font-bold mb-2">{landingSettings.title}</h1>
           <p className="text-lg max-w-3xl mx-auto">
-            НИЙТИЙН ҮЙЛЧИЛГЭЭТЭЙ ЭМИЙН САНГУУДЫН НЭГДСЭН ГИШҮҮДДЭЭ ҮЙЛЧИЛДЭГ
-            ТӨРИЙН БУС БАЙГУУЛЛАГА
+            {landingSettings.subtitle}
           </p>
         </div>
         {/* Service Cards */}

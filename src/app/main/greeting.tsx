@@ -1,15 +1,26 @@
 "use client";
 
-import { useContent } from "@/lib/content/content.context";
 import Image from "next/image";
 
-export default function Greeting() {
-  const { content } = useContent();
+interface GreetingProps {
+  content: {
+    title?: string;
+    description?: string;
+    image?: string;
+  };
+}
 
-  const greeting = content?.greeting || {
+export default function Greeting({ content }: GreetingProps) {
+  const defaultGreeting = {
     title: "Мэндчилгээ",
     description: "Манай байгууллагын мэндчилгээ...",
     image: null,
+  };
+
+  const greeting = {
+    title: content?.title || defaultGreeting.title,
+    description: content?.description || defaultGreeting.description,
+    image: content?.image || defaultGreeting.image,
   };
 
   return (
@@ -21,32 +32,20 @@ export default function Greeting() {
           </h2>
           <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
         </div>
-        <div
-          className={`grid ${
-            greeting.image
-              ? "grid-cols-1 md:grid-cols-2"
-              : "grid-cols-1 max-w-3xl mx-auto"
-          } gap-16 items-center`}
-        >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div className="prose prose-lg">
+            <p className="text-gray-600">{greeting.description}</p>
+          </div>
           {greeting.image && (
-            <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-xl">
+            <div className="relative h-64 md:h-96">
               <Image
                 src={greeting.image}
-                alt="Greeting"
+                alt={greeting.title}
                 fill
-                className="object-cover"
+                className="object-cover rounded-lg"
               />
             </div>
           )}
-          <div className="space-y-8">
-            <div className="prose prose-lg text-gray-600">
-              {greeting.description.split("\n").map((paragraph, index) => (
-                <p key={index} className="mb-6 leading-relaxed">
-                  {paragraph}
-                </p>
-              ))}
-            </div>
-          </div>
         </div>
       </div>
     </section>

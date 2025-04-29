@@ -85,19 +85,31 @@ export interface LawItem {
   // Define the structure of the law item object
 }
 
+interface Setting {
+  key: string;
+  value: string;
+}
+
 export class ApiClient {
   private instance: AxiosInstance;
   private token: string | null = null;
 
   constructor() {
     this.instance = axios.create({
-      baseURL: apiConfig.backendUrl,
-      timeout: apiConfig.timeout,
+      baseURL: "http://192.168.88.93:8000",
       headers: {
         "Content-Type": "application/json",
         Accept: "application/json",
       },
     });
+
+    // Initialize token from localStorage
+    if (typeof window !== "undefined") {
+      this.token = localStorage.getItem("token");
+      if (this.token) {
+        this.setToken(this.token);
+      }
+    }
 
     // Add request interceptor to add token
     this.instance.interceptors.request.use((config) => {
@@ -107,17 +119,18 @@ export class ApiClient {
         "/api/register",
         "/api/posts",
         "/api/menus",
-        "/api/settings",
         "/api/footer",
         "/api/advertisements",
         "/api/ad-categories",
         "/api/transparency",
         "/api/reports/notifications",
         "/api/notifications",
-        "/api/upload",
+        "/api/banners",
       ].some((endpoint) => config.url?.includes(endpoint));
 
       if (isPublicEndpoint) {
+        // Explicitly remove Authorization header for public endpoints
+        delete config.headers.Authorization;
         return config;
       }
 
@@ -137,14 +150,13 @@ export class ApiClient {
           "/api/register",
           "/api/posts",
           "/api/menus",
-          "/api/settings",
           "/api/footer",
           "/api/advertisements",
           "/api/ad-categories",
           "/api/transparency",
           "/api/reports/notifications",
           "/api/notifications",
-          "/api/upload",
+          "/api/banners",
         ].some((endpoint) => error.config?.url?.includes(endpoint));
 
         if (error.response?.status === 401 && !isPublicEndpoint) {
@@ -162,6 +174,11 @@ export class ApiClient {
       if (error.code === "ECONNREFUSED") {
         return new ApiError(
           "Backend server is not running. Please start the backend server."
+        );
+      }
+      if (error.message.includes("Cannot read properties of undefined")) {
+        return new ApiError(
+          "Network error: Unable to connect to the server. Please check your internet connection and try again."
         );
       }
       return new ApiError(`Network error: ${error.message}`);
@@ -238,10 +255,16 @@ export class ApiClient {
 
   setToken(token: string | null) {
     this.token = token;
+    if (token) {
+      localStorage.setItem("token", token);
+    } else {
+      localStorage.removeItem("token");
+    }
   }
 
   clearToken() {
     this.setToken(null);
+    localStorage.removeItem("token");
   }
 
   // Auth methods
@@ -307,6 +330,74 @@ export class ApiClient {
     }
   }
 
+  async adminLogin(email: string, password: string): Promise<LoginResponse> {
+    try {
+      console.log("Attempting admin login with:", { email });
+      const response = await this.instance.post<LoginResponse>(
+        endpoints.auth.admin.login,
+        {
+          email,
+          password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
+          validateStatus: (status) => status < 500,
+        }
+      );
+
+      console.log("Admin login response:", {
+        status: response.status,
+        data: response.data,
+        headers: response.headers,
+      });
+
+      if (response.status === 401) {
+        const errorMessage =
+          response.data?.error || "Invalid admin credentials";
+        console.error("Admin login failed:", errorMessage);
+        throw new Error(errorMessage);
+      }
+
+      if (!response.data || !response.data.token) {
+        console.error("Invalid admin response format:", response.data);
+        throw new Error("Invalid response format from server");
+      }
+
+      // Get user profile after successful login
+      this.setToken(response.data.token);
+      const user = await this.getProfile();
+      console.log("Got user profile:", user);
+
+      return {
+        token: response.data.token,
+        message: response.data.message,
+        user: user,
+      };
+    } catch (error) {
+      console.error("Admin login error:", error);
+      if (axios.isAxiosError(error)) {
+        console.error("Axios error details:", {
+          status: error.response?.status,
+          data: error.response?.data,
+          headers: error.response?.headers,
+          config: {
+            url: error.config?.url,
+            method: error.config?.method,
+            headers: error.config?.headers,
+          },
+        });
+
+        const errorMessage =
+          error.response?.data?.error || "Admin login failed";
+        throw new Error(errorMessage);
+      }
+      throw error;
+    }
+  }
+
   async register(data: RegisterRequest): Promise<AuthResponse> {
     const response = await this.instance.post<{ data: AuthResponse }>(
       endpoints.auth.register,
@@ -326,7 +417,7 @@ export class ApiClient {
 
   async getProfile(): Promise<User> {
     try {
-      const response = await this.instance.get<User>("/api/profile");
+      const response = await this.instance.get<User>("/api/admin/profile");
       return response.data;
     } catch (error) {
       throw this.handleError(error as AxiosError);
@@ -335,36 +426,14 @@ export class ApiClient {
 
   async updateProfile(data: Partial<User>): Promise<User> {
     try {
-      const response = await this.instance.put<User>("/api/profile", data);
+      const response = await this.instance.put<User>(
+        "/api/admin/profile",
+        data
+      );
       return response.data;
     } catch (error) {
       throw this.handleError(error as AxiosError);
     }
-  }
-
-  // Content methods
-  async getContent(): Promise<Content> {
-    const response = await this.instance.get<{ data: Content }>("/api/content");
-    return response.data.data;
-  }
-
-  async updateContent(section: string, data: any): Promise<void> {
-    await this.instance.put(`/api/content/${section}`, data);
-  }
-
-  async deleteContent(section: string, id: string): Promise<void> {
-    await this.instance.delete(`/api/content/${section}/${id}`);
-  }
-
-  async updateLawContent(
-    lawId: string,
-    data: Partial<LawItem>
-  ): Promise<Content> {
-    const response = await this.instance.put<{ data: Content }>(
-      endpoints.content.updateLaw(lawId),
-      data
-    );
-    return response.data.data;
   }
 
   // Post methods
@@ -409,11 +478,46 @@ export class ApiClient {
   }
 
   // Settings methods
-  async getSettings(): Promise<Settings> {
-    const response = await this.instance.get<{ data: Settings }>(
-      endpoints.settings.get
-    );
-    return response.data.data;
+  async getSettings(): Promise<Setting[]> {
+    const response = await this.instance.get<Setting[]>("/api/settings");
+    return response.data;
+  }
+
+  async updateSettings(settings: Setting[]): Promise<void> {
+    try {
+      if (!this.token) {
+        throw new ApiError("Not authenticated. Please log in again.");
+      }
+
+      // Convert array of settings to a single object with key-value pairs
+      const settingsData = settings.reduce((acc, setting) => {
+        acc[setting.key] = setting.value;
+        return acc;
+      }, {} as Record<string, string>);
+
+      const response = await this.instance.put<void>(
+        "/api/settings",
+        settingsData,
+        {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        this.clearToken();
+        throw new ApiError("Session expired. Please log in again.");
+      }
+
+      return response.data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw this.handleError(error as AxiosError);
+    }
   }
 
   // Footer methods
@@ -557,7 +661,7 @@ export class ApiClient {
         return false;
       }
 
-      const response = await this.instance.get("/api/profile", {
+      const response = await this.instance.get("/api/admin/profile", {
         headers: {
           Authorization: `Bearer ${this.token}`,
         },
@@ -570,8 +674,32 @@ export class ApiClient {
 
   // User management methods
   async getUsers(): Promise<User[]> {
-    const response = await this.instance.get<{ data: User[] }>("/api/users");
-    return response.data.data;
+    try {
+      if (!this.token) {
+        throw new ApiError("Not authenticated. Please log in again.");
+      }
+
+      const response = await this.instance.get<{ data: User[] }>(
+        endpoints.auth.admin.users,
+        {
+          headers: {
+            Authorization: `Bearer ${this.token}`,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        this.clearToken();
+        throw new ApiError("Session expired. Please log in again.");
+      }
+
+      return response.data.data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw this.handleError(error as AxiosError);
+    }
   }
 
   async approveUser(userId: string): Promise<User> {
@@ -585,12 +713,25 @@ export class ApiClient {
     await this.instance.delete(`/api/users/${userId}`);
   }
 
-  async updateUserStatus(userId: string, isApproved: boolean): Promise<User> {
-    const response = await this.instance.patch<{ data: User }>(
-      `/api/users/${userId}/status`,
-      { isApproved }
-    );
-    return response.data.data;
+  async updateUserStatus(
+    userId: string,
+    status: "approved" | "rejected"
+  ): Promise<void> {
+    try {
+      await this.instance.patch(`/api/admin/users/${userId}/status`, {
+        status,
+      });
+    } catch (error) {
+      if (error instanceof AxiosError) {
+        if (error.response?.status === 401) {
+          throw new Error("Unauthorized access");
+        }
+        throw new Error(
+          error.response?.data?.message || "Failed to update user status"
+        );
+      }
+      throw new Error("Network error");
+    }
   }
 
   async updateUserPremiumStatus(
@@ -629,18 +770,65 @@ export class ApiClient {
 
   // File upload methods
   async uploadFile(file: File): Promise<string> {
-    const formData = new FormData();
-    formData.append("file", file);
-    const response = await this.instance.post<{ data: { url: string } }>(
-      "/api/upload",
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+    try {
+      if (!this.token) {
+        throw new ApiError("Not authenticated. Please log in again.");
       }
-    );
-    return response.data.data.url;
+
+      const formData = new FormData();
+      formData.append("file", file);
+      const response = await this.instance.post(
+        endpoints.upload.file,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${this.token}`,
+          },
+        }
+      );
+
+      if (response.status === 401) {
+        this.clearToken();
+        throw new ApiError("Session expired. Please log in again.");
+      }
+
+      // Handle different response formats
+      if (response.data && response.data.url) {
+        return response.data.url;
+      } else if (
+        response.data &&
+        response.data.data &&
+        response.data.data.url
+      ) {
+        return response.data.data.url;
+      } else if (response.data && typeof response.data === "string") {
+        return response.data;
+      }
+
+      console.error("Unexpected upload response format:", response.data);
+      throw new ApiError("Unexpected response format from server");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw this.handleError(error as AxiosError);
+    }
+  }
+
+  // Banner methods
+  async getBanners(): Promise<any[]> {
+    const response = await this.instance.get<{ data: any[] }>("/api/banners", {
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+    });
+    return response.data.data;
+  }
+
+  async createBanner(data: any): Promise<void> {
+    await this.instance.post("/banners", data);
   }
 }
 

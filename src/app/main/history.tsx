@@ -1,15 +1,26 @@
 "use client";
 
-import { useContent } from "@/lib/content/content.context";
 import Image from "next/image";
 
-export default function History() {
-  const { content } = useContent();
+interface HistoryProps {
+  content: {
+    title?: string;
+    description?: string;
+    image?: string;
+  };
+}
 
-  const history = content?.history || {
+export default function History({ content }: HistoryProps) {
+  const defaultHistory = {
     title: "Түүхэн замнал",
     description: "Манай байгууллагын түүхэн замналын талаарх мэдээлэл...",
     image: null,
+  };
+
+  const history = {
+    title: content?.title || defaultHistory.title,
+    description: content?.description || defaultHistory.description,
+    image: content?.image || defaultHistory.image,
   };
 
   return (
@@ -21,25 +32,17 @@ export default function History() {
           </h2>
           <div className="w-24 h-1 bg-blue-600 mx-auto"></div>
         </div>
-        <div
-          className={`grid ${
-            history.image
-              ? "grid-cols-1 md:grid-cols-2"
-              : "grid-cols-1 max-w-3xl mx-auto"
-          } gap-16 items-center`}
-        >
-          <div className="space-y-6">
-            <p className="text-gray-600 leading-relaxed text-lg">
-              {history.description}
-            </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+          <div className="prose prose-lg">
+            <p className="text-gray-600">{history.description}</p>
           </div>
           {history.image && (
-            <div className="relative h-[500px] rounded-2xl overflow-hidden shadow-xl">
+            <div className="relative h-64 md:h-96">
               <Image
                 src={history.image}
-                alt="History"
+                alt={history.title}
                 fill
-                className="object-cover"
+                className="object-cover rounded-lg"
               />
             </div>
           )}

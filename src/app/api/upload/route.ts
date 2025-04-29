@@ -1,41 +1,48 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { writeFile } from "fs/promises";
 import { join } from "path";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json(
+        { error: "Unauthorized: Please log in again" },
+        { status: 401 }
+      );
+    }
+
+    // Get the form data
     const formData = await request.formData();
     const file = formData.get("file") as File;
 
     if (!file) {
-      return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-    }
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      return NextResponse.json(
-        { error: "Only image files are allowed" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Generate unique filename
-    const timestamp = Date.now();
-    const filename = `${timestamp}-${file.name}`;
+    // Create a unique filename
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const filename = `${uniqueSuffix}-${file.name}`;
 
-    // Save file to public directory
-    const path = join(process.cwd(), "public", "uploads", filename);
-    await writeFile(path, buffer);
+    // Define the upload directory
+    const uploadDir = join(process.cwd(), "public", "uploads");
+    const filepath = join(uploadDir, filename);
 
-    // Return the URL of the uploaded file
-    const url = `/uploads/${filename}`;
-    return NextResponse.json({ url });
+    // Write the file
+    await writeFile(filepath, buffer);
+
+    // Return the file URL
+    const fileUrl = `/uploads/${filename}`;
+    return NextResponse.json({ url: fileUrl });
   } catch (error) {
-    console.error("Error uploading file:", error);
+    console.error("Upload error:", error);
     return NextResponse.json(
       { error: "Failed to upload file" },
       { status: 500 }

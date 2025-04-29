@@ -1,13 +1,40 @@
 "use client";
 
-import { useContent } from "@/lib/content/content.context";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { FaPhone, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
+import { apiClient } from "@/lib/api/client";
+import { FooterSection } from "@/lib/api/types";
 
 const Footer = () => {
-  const { content } = useContent();
+  const [footerSection, setFooterSection] = useState<FooterSection>({
+    id: "",
+    title: "",
+    mapImage: null,
+    address: "",
+    phone: "",
+    email: "",
+    socialLinks: [],
+    copyright: "",
+    links: [],
+  });
 
-  const getValidImageUrl = (url: string | null) => {
+  useEffect(() => {
+    const fetchFooter = async () => {
+      try {
+        const response = await apiClient.getFooter();
+        if (response.sections && response.sections.length > 0) {
+          setFooterSection(response.sections[0]);
+        }
+      } catch (error) {
+        console.error("Failed to fetch footer:", error);
+      }
+    };
+
+    fetchFooter();
+  }, []);
+
+  const getValidImageUrl = (url: string | null | undefined) => {
     if (!url) return null;
 
     // If it's a base64 data URL, return it as is
@@ -21,18 +48,6 @@ const Footer = () => {
     }
 
     return url;
-  };
-
-  // Get the first section or use empty values as fallback
-  const footerSection = content.footer?.sections?.[0] || {
-    title: "",
-    mapImage: null,
-    address: "",
-    phone: "",
-    email: "",
-    socialLinks: [],
-    copyright: "",
-    links: [],
   };
 
   const mapImageUrl = getValidImageUrl(footerSection.mapImage);
@@ -62,33 +77,57 @@ const Footer = () => {
           )}
         </div>
 
-        {/* Map Image Section */}
-        <div className="mt-8">
-          <div className="relative w-full h-[300px] rounded-lg overflow-hidden bg-gray-800 flex items-center justify-center">
-            {mapImageUrl ? (
-              <Image
-                src={mapImageUrl}
-                alt={`Map location: ${footerSection.address}`}
-                fill
-                className="object-cover"
-                priority
-              />
-            ) : (
-              <p className="text-gray-500 text-center px-4">
-                No map image uploaded.
-              </p>
-            )}
+        {/* Map Image */}
+        {mapImageUrl && (
+          <div className="mb-8">
+            <Image
+              src={mapImageUrl}
+              alt="Map"
+              width={800}
+              height={400}
+              className="w-full h-auto rounded-lg"
+            />
           </div>
-        </div>
+        )}
+
+        {/* Social Links */}
+        {footerSection.socialLinks && footerSection.socialLinks.length > 0 && (
+          <div className="flex justify-center gap-4 mb-8">
+            {footerSection.socialLinks.map((link, index) => (
+              <a
+                key={index}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                {link.platform}
+              </a>
+            ))}
+          </div>
+        )}
+
+        {/* Links */}
+        {footerSection.links && footerSection.links.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            {footerSection.links.map((link, index) => (
+              <a
+                key={index}
+                href={link.url}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                {link.text}
+              </a>
+            ))}
+          </div>
+        )}
 
         {/* Copyright */}
-        <div className="mt-8 pt-8 border-t border-gray-800 text-center text-gray-400">
-          <p>
-            &copy; {new Date().getFullYear()}{" "}
-            {footerSection.title || "Medtech MRP"}. Бүх эрх хуулиар
-            хамгаалагдсан.
-          </p>
-        </div>
+        {footerSection.copyright && (
+          <div className="text-center text-gray-400">
+            <p>{footerSection.copyright}</p>
+          </div>
+        )}
       </div>
     </footer>
   );

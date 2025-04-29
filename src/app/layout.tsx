@@ -1,58 +1,51 @@
+"use client";
+
 import Footer from "@/components/main/Footer";
-import type { Metadata } from "next";
 import "./globals.css";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
 import ClientLayout from "@/components/ClientLayout";
+import { useEffect, useState } from "react";
+import { apiClient } from "@/lib/api/client";
+import Head from "next/head";
 
 const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "Zahii",
-  description: "Шинэ цаг үеийн хүргэлтийн үйлчилгээ",
-  openGraph: {
-    type: "website",
-    images: ["/branding/og.png"],
-    title: "Zahii",
-    description: "Шинэ цаг үеийн хүргэлтийн үйлчилгээ",
-    siteName: "Zahii",
-  },
-  robots: { index: true, follow: true },
-  keywords: [
-    "zahii",
-    "zahii app",
-    "zahii delivery",
-    "zahii delivery app",
-    "zahii delivery service",
-    "zahii delivery mongolia",
-    "zahii delivery app mongolia",
-    "zahii delivery service mongolia",
-    "zahii delivery service app",
-    "Захий",
-    "захий апп",
-    "захий хүргэлт",
-    "захий хүргэлт апп",
-    "захий хүргэлт үйлчилгээ",
-    "захий хүргэлт монгол",
-    "захий хүргэлт апп монгол",
-    "захий хүргэлт үйлчилгээ монгол",
-    "хүргэлт үйлчилгээ",
-    "хүргэлт үйлчилгээ апп",
-    "хүргэлт",
-    "Шинэ цаг үеийн хүргэлтийн үйлчилгээ 🤗 ОНЛАЙН 24/7 ДЭЛГҮҮР",
-    "ОНЛАЙН 24/7 ДЭЛГҮҮР",
-    "ОНЛАЙН ДЭЛГҮҮР",
-  ],
-};
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const [siteTitle, setSiteTitle] = useState("МРП - Монголын Ромын Пап");
+  const [siteDescription, setSiteDescription] = useState(
+    "Монголын Ромын Пап байгууллагын албан ёсны вэбсайт"
+  );
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const settings = await apiClient.getSettings();
+        const titleSetting = settings.find((s) => s.key === "site_title");
+        const descSetting = settings.find((s) => s.key === "site_description");
+
+        if (titleSetting?.value) setSiteTitle(titleSetting.value);
+        if (descSetting?.value) setSiteDescription(descSetting.value);
+      } catch (err) {
+        console.error("Failed to fetch site settings:", err);
+      }
+    };
+
+    fetchSettings();
+  }, []);
+
   return (
-    <html lang="en">
+    <html lang="mn">
       <head>
+        <title>{siteTitle}</title>
+        <meta name="description" content={siteDescription} />
+        <meta property="og:title" content={siteTitle} />
+        <meta property="og:description" content={siteDescription} />
+        <meta property="og:site_name" content={siteTitle} />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <link
           rel="apple-touch-icon"
@@ -73,10 +66,11 @@ export default function RootLayout({
         />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
-      <body
-        className={`antialiased relative bg-[#F1F1F1] min-h-screen flex flex-col ${inter.className}`}
-      >
-        <ClientLayout>{children}</ClientLayout>
+      <body className={inter.className}>
+        <ClientLayout>
+          {children}
+          <Footer />
+        </ClientLayout>
         <Toaster />
       </body>
     </html>

@@ -1,44 +1,16 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
-import { apiClient } from "@/lib/api/client";
-import { Content } from "@/lib/api/types";
 
-export default function Hero() {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [content, setContent] = useState<Record<string, any>>({
-    title: "Welcome to Medtech MRP",
-    subtitle: "Your Medical Resource Planning Solution",
-    backgroundImage: null,
-  });
+interface HeroProps {
+  content: {
+    title?: string;
+    subtitle?: string;
+    backgroundImage?: string;
+  };
+}
 
-  const fetchContent = useCallback(async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const response = await apiClient.getContent();
-      if (response && response.hero) {
-        setContent({
-          title: response.hero.title || "Welcome to Medtech MRP",
-          subtitle:
-            response.hero.subtitle || "Your Medical Resource Planning Solution",
-          backgroundImage: response.hero.backgroundImage || null,
-        });
-      }
-    } catch (error) {
-      console.error("Failed to fetch hero content:", error);
-      // Silently handle the error without setting any state
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchContent();
-  }, [fetchContent]);
-
+export default function Hero({ content }: HeroProps) {
   const getValidImageUrl = (url: string | null) => {
     if (!url) return null;
     if (url.startsWith("data:image")) return url;
@@ -46,29 +18,32 @@ export default function Hero() {
     return url;
   };
 
-  const imageUrl = getValidImageUrl(content.backgroundImage);
+  const imageUrl = content?.backgroundImage
+    ? getValidImageUrl(content.backgroundImage)
+    : null;
 
   return (
-    <section className="relative min-h-screen flex items-center justify-center bg-white">
-      <div className="absolute inset-0 z-0">
+    <div className="relative h-screen w-full">
+      {imageUrl && (
         <Image
-          src="/branding/consultation.jpg"
-          alt="Background"
+          src={imageUrl}
+          alt="Hero background"
           fill
           className="object-cover"
           priority
+          quality={100}
         />
-        <div className="absolute inset-0 bg-black/30" />
+      )}
+      <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+        <div className="text-center text-white max-w-3xl px-4">
+          <h1 className="text-5xl md:text-6xl font-bold mb-6">
+            {content?.title || "Welcome to Medtech MRP"}
+          </h1>
+          <p className="text-xl md:text-2xl">
+            {content?.subtitle || "Your Medical Resource Planning Solution"}
+          </p>
+        </div>
       </div>
-
-      <div className="container mx-auto px-4 relative z-10 text-center text-white">
-        <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-          {content?.title || "Welcome to Medtech MRP"}
-        </h1>
-        <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-          {content?.subtitle || "Your Medical Resource Planning Solution"}
-        </p>
-      </div>
-    </section>
+    </div>
   );
 }

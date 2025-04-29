@@ -1,203 +1,213 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth/auth.context";
-import { apiClient } from "@/lib/api/client";
-import { User } from "@/lib/api/types";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import {
-  Box,
-  Button,
-  Paper,
   Table,
   TableBody,
   TableCell,
-  TableContainer,
   TableHead,
+  TableHeader,
   TableRow,
-  IconButton,
-  Menu,
-  MenuItem,
-  ListItemIcon,
-  Typography,
-  Chip,
-} from "@mui/material";
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
+import { apiClient } from "@/lib/api/client";
+import { useToast } from "@/components/ui/use-toast";
+import { Eye, Check, X } from "lucide-react";
 import {
-  MoreVert as MoreVertIcon,
-  Check as CheckIcon,
-  Delete as DeleteIcon,
-  Add as AddIcon,
-} from "@mui/icons-material";
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  username: string;
+  isAdmin: boolean;
+  pharmacyName?: string;
+  phoneNumber?: string;
+  address?: string;
+  isApproved?: boolean;
+  paymentProof?: string;
+  role: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+  pharmacyRegisterNumber?: string;
+  pharmacyAddress?: string;
+}
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
-  const { user } = useAuth();
-  const router = useRouter();
+  const [selectedDocument, setSelectedDocument] = useState<{
+    url: string;
+    type: "image" | "pdf";
+  } | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (!user || user.role !== "admin") {
-      router.push("/");
-      return;
-    }
-
-    const fetchUsers = async () => {
-      try {
-        const response = await apiClient.getUsers();
-        setUsers(response);
-      } catch (error) {
-        console.error("Failed to fetch users:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUsers();
-  }, [user, router]);
+  }, []);
 
-  const handleMenuOpen = (
-    event: React.MouseEvent<HTMLElement>,
-    userId: string
-  ) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedUserId(userId);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-    setSelectedUserId(null);
-  };
-
-  const handleApprove = async () => {
-    if (!selectedUserId) return;
-
+  const fetchUsers = async () => {
     try {
-      await apiClient.approveUser(selectedUserId);
+      const response = await apiClient.getUsers();
+      setUsers(response);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch users",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStatusChange = async (
+    userId: string,
+    newStatus: "approved" | "rejected"
+  ) => {
+    try {
+      await apiClient.updateUserStatus(userId, newStatus);
       setUsers(
-        users.map((u) =>
-          u.id === selectedUserId ? { ...u, isApproved: true } : u
+        users.map((user) =>
+          user.id === userId ? { ...user, status: newStatus } : user
         )
       );
+      toast({
+        title: "Success",
+        description: `User status updated to ${newStatus}`,
+      });
     } catch (error) {
-      console.error("Failed to approve user:", error);
-    } finally {
-      handleMenuClose();
+      toast({
+        title: "Error",
+        description: "Failed to update user status",
+        variant: "destructive",
+      });
     }
   };
 
-  const handleDelete = async () => {
-    if (!selectedUserId) return;
-
-    if (!confirm("Are you sure you want to delete this user?")) {
-      handleMenuClose();
-      return;
-    }
-
-    try {
-      await apiClient.deleteUser(selectedUserId);
-      setUsers(users.filter((u) => u.id !== selectedUserId));
-    } catch (error) {
-      console.error("Failed to delete user:", error);
-    } finally {
-      handleMenuClose();
-    }
-  };
-
-  if (loading) {
+  const getStatusBadge = (status: string) => {
+    const variants = {
+      pending: "bg-yellow-100 text-yellow-800",
+      approved: "bg-green-100 text-green-800",
+      rejected: "bg-red-100 text-red-800",
+    };
     return (
-      <Box sx={{ display: "flex", justifyContent: "center", p: 3 }}>
-        <Typography>Loading...</Typography>
-      </Box>
+      <Badge className={variants[status as keyof typeof variants]}>
+        {status}
+      </Badge>
     );
-  }
+  };
 
   return (
-    <Box>
-      <Box sx={{ display: "flex", justifyContent: "space-between", mb: 3 }}>
-        <Typography variant="h5" component="h1">
-          User Management
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => router.push("/admin/users/new")}
-        >
-          Add New User
-        </Button>
-      </Box>
+    <div className="p-6">
+      <h1 className="text-2xl font-bold mb-6">Хэрэглэгчид</h1>
 
-      <TableContainer component={Paper}>
+      <div className="rounded-md border">
         <Table>
-          <TableHead>
+          <TableHeader>
             <TableRow>
-              <TableCell>Username</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>Name</TableCell>
-              <TableCell>Role</TableCell>
-              <TableCell>Status</TableCell>
-              <TableCell>Created At</TableCell>
-              <TableCell align="right">Actions</TableCell>
+              <TableHead>Нэр</TableHead>
+              <TableHead>И-мэйл</TableHead>
+              <TableHead>Утас</TableHead>
+              <TableHead>Төлөв</TableHead>
+              <TableHead>Баримт бичиг</TableHead>
+              <TableHead>Үйлдэл</TableHead>
             </TableRow>
-          </TableHead>
+          </TableHeader>
           <TableBody>
             {users.map((user) => (
               <TableRow key={user.id}>
-                <TableCell>{user.username}</TableCell>
-                <TableCell>{user.email}</TableCell>
                 <TableCell>{user.name}</TableCell>
+                <TableCell>{user.email}</TableCell>
+                <TableCell>{user.phoneNumber}</TableCell>
+                <TableCell>{getStatusBadge(user.status)}</TableCell>
                 <TableCell>
-                  <Chip
-                    label={user.role}
-                    color={user.role === "admin" ? "error" : "default"}
-                    size="small"
-                  />
+                  {user.paymentProof && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        setSelectedDocument({
+                          url: user.paymentProof || "",
+                          type: "image",
+                        })
+                      }
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      Үзэх
+                    </Button>
+                  )}
                 </TableCell>
                 <TableCell>
-                  <Chip
-                    label={user.isApproved ? "Approved" : "Pending"}
-                    color={user.isApproved ? "success" : "default"}
-                    size="small"
-                  />
-                </TableCell>
-                <TableCell>
-                  {new Date(user.createdAt).toLocaleDateString()}
-                </TableCell>
-                <TableCell align="right">
-                  <IconButton
-                    onClick={(e) => handleMenuOpen(e, user.id)}
-                    size="small"
-                  >
-                    <MoreVertIcon />
-                  </IconButton>
+                  <div className="flex space-x-2">
+                    {user.status === "pending" && (
+                      <>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-green-600"
+                          onClick={() =>
+                            handleStatusChange(user.id, "approved")
+                          }
+                        >
+                          <Check className="w-4 h-4 mr-1" />
+                          Зөвшөөрөх
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600"
+                          onClick={() =>
+                            handleStatusChange(user.id, "rejected")
+                          }
+                        >
+                          <X className="w-4 h-4 mr-1" />
+                          Татгалзах
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </TableContainer>
+      </div>
 
-      <Menu
-        anchorEl={anchorEl}
-        open={Boolean(anchorEl)}
-        onClose={handleMenuClose}
+      <Dialog
+        open={!!selectedDocument}
+        onOpenChange={() => setSelectedDocument(null)}
       >
-        {!users.find((u) => u.id === selectedUserId)?.isApproved && (
-          <MenuItem onClick={handleApprove}>
-            <ListItemIcon>
-              <CheckIcon fontSize="small" />
-            </ListItemIcon>
-            Approve
-          </MenuItem>
-        )}
-        <MenuItem onClick={handleDelete}>
-          <ListItemIcon>
-            <DeleteIcon fontSize="small" />
-          </ListItemIcon>
-          Delete
-        </MenuItem>
-      </Menu>
-    </Box>
+        <DialogContent className="max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Баримт бичиг</DialogTitle>
+          </DialogHeader>
+          {selectedDocument && (
+            <div className="mt-4">
+              {selectedDocument.type === "image" ? (
+                <img
+                  src={selectedDocument.url}
+                  alt="User document"
+                  className="max-w-full h-auto"
+                />
+              ) : (
+                <iframe
+                  src={selectedDocument.url}
+                  className="w-full h-[600px]"
+                  title="User document"
+                />
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 }

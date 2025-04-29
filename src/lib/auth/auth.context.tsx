@@ -8,7 +8,7 @@ import {
   ReactNode,
 } from "react";
 import { apiClient } from "../api/client";
-import { User } from "../api/types";
+import { User, RegisterRequest } from "../api/types";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
@@ -18,17 +18,8 @@ interface AuthContextType {
   isLoading: boolean;
   isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: {
-    email: string;
-    password: string;
-    name: string;
-    username: string;
-    pharmacyName: string;
-    pharmacyRegisterNumber: string;
-    pharmacyAddress: string;
-    phoneNumber: string;
-    payment_proof?: string;
-  }) => Promise<void>;
+  adminLogin: (email: string, password: string) => Promise<void>;
+  register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
   error: string | null;
 }
@@ -42,122 +33,107 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is already logged in
-    const token = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("token="))
-      ?.split("=")[1];
-    if (token) {
-      apiClient.setToken(token);
-      // Validate token and fetch user profile
-      apiClient
-        .validateToken()
-        .then((isValid) => {
-          if (isValid) {
-            return apiClient.getProfile();
-          } else {
-            throw new Error("Invalid token");
+    const validateToken = async () => {
+      try {
+        // Initialize token from localStorage
+        const storedToken = localStorage.getItem("token");
+        if (storedToken) {
+          apiClient.setToken(storedToken);
+        }
+
+        const isValid = await apiClient.validateToken();
+        if (isValid) {
+          const user = await apiClient.getProfile();
+          if (user) {
+            setUser(user);
           }
-        })
-        .then((user) => {
-          setUser(user);
-          setIsLoading(false);
-        })
-        .catch(() => {
-          document.cookie =
-            "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-          apiClient.setToken(null);
-          setUser(null);
-          setIsLoading(false);
-        });
-    } else {
-      setIsLoading(false);
-    }
+        }
+      } catch (error) {
+        console.error("Token validation failed:", error);
+        // Clear invalid token
+        apiClient.clearToken();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    validateToken();
   }, []);
 
   const login = async (email: string, password: string) => {
     try {
+      setIsLoading(true);
       setError(null);
-      console.log("Starting login process...");
       const response = await apiClient.login(email, password);
-      console.log("Login response:", {
-        token: response.token ? "present" : "missing",
-        user: response.user,
-        message: response.message,
-      });
-
-      // Store token in cookies
-      document.cookie = `token=${response.token}; path=/; max-age=86400`; // 24 hours
-      apiClient.setToken(response.token);
-
       if (response.user) {
-        console.log("Setting user:", response.user);
         setUser(response.user);
-        // Also store user in cookie for server-side access
-        document.cookie = `user=${JSON.stringify(
-          response.user
-        )}; path=/; max-age=86400`;
-      } else {
-        console.log("No user in response, fetching profile...");
-        const profile = await apiClient.getProfile();
-        console.log("Fetched profile:", profile);
-        setUser(profile);
-        // Store user in cookie for server-side access
-        document.cookie = `user=${JSON.stringify(
-          profile
-        )}; path=/; max-age=86400`;
+        router.push("/dashboard");
       }
-
-      toast.success("Successfully logged in");
-    } catch (err) {
-      console.error("Login error:", err);
-      setError("Invalid credentials");
-      throw err;
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Login failed");
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const register = async (data: {
-    email: string;
-    password: string;
-    name: string;
-    username: string;
-    pharmacyName: string;
-    pharmacyRegisterNumber: string;
-    pharmacyAddress: string;
-    phoneNumber: string;
-    payment_proof?: string;
-  }) => {
+  const adminLogin = async (email: string, password: string) => {
     try {
-      const response = await apiClient.register({
-        ...data,
-        payment_proof: data.payment_proof || "",
-      });
-      setUser(response.user);
-      toast.success("Registration successful");
+      setIsLoading(true);
+      setError(null);
+      console.log("Starting admin login...");
+      const response = await apiClient.adminLogin(email, password);
+      console.log("Admin login response:", response);
+
+      if (response.user && response.user.is_active) {
+        console.log("Setting admin user:", response.user);
+        setUser(response.user);
+        console.log("Redirecting to admin dashboard...");
+        // Use window.location.href for a full page reload to ensure state is properly set
+        window.location.href = "/admin/dashboard";
+      } else {
+        console.error("User is not an admin:", response.user);
+        throw new Error("User is not an admin");
+      }
     } catch (error) {
-      console.error("Registration failed:", error);
-      toast.error(
-        error instanceof Error ? error.message : "Registration failed"
-      );
+      console.error("Admin login error:", error);
+      setError(error instanceof Error ? error.message : "Admin login failed");
       throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const register = async (data: RegisterRequest) => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const response = await apiClient.register(data);
+      if (response.user) {
+        setUser(response.user);
+        router.push("/dashboard");
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Registration failed");
+      throw error;
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const logout = () => {
-    document.cookie = "token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    document.cookie = "user=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
-    apiClient.setToken(null);
+    apiClient.logout();
     setUser(null);
     router.push("/");
-    toast.success("Successfully logged out");
   };
 
   const value = {
     user,
     isAuthenticated: !!user,
     isLoading,
-    isAdmin: user?.role === "admin",
+    isAdmin: user?.is_active === true,
     login,
+    adminLogin,
     register,
     logout,
     error,
