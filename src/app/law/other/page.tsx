@@ -29,10 +29,10 @@ export default function HealthLawListPage() {
           <Link color="inherit" href="/law">
             Хууль эрх зүй
           </Link>
-          <Typography color="text.primary"> Монгол улсын хууль</Typography>
+          <Typography color="text.primary"> Бусад эрх зүйн акт</Typography>
         </Breadcrumbs>
         <h1 className="text-2xl font-bold mb-4 text-gray-800">
-          Монгол улсын хууль
+          Бусад эрх зүйн акт
         </h1>
         <div className="border border-gray-200 rounded-sm">
           {healthLaws.map((law, idx) => (

@@ -67,11 +67,15 @@ export default function RootLayout({
         />
         <link rel="manifest" href="/site.webmanifest" />
       </head>
-      <body className={inter.className}>
-        <ClientLayout>
-          {children}
-          {pathname !== "/" && pathname !== "/login" && pathname !== "/register" && <Footer />}
-        </ClientLayout>
+      <body className={`${inter.className} overflow-x-hidden`}>
+        <div className="min-h-screen flex flex-col">
+          <ClientLayout>
+            {children}
+            {pathname !== "/" &&
+              pathname !== "/login" &&
+              pathname !== "/register" && <Footer />}
+          </ClientLayout>
+        </div>
         <Toaster />
       </body>
     </html>

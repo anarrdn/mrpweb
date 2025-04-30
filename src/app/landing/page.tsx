@@ -7,7 +7,12 @@ import { useRouter } from "next/navigation";
 import { apiClient } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Notification } from "@/lib/api/types";
 
 interface LandingSettings {
@@ -21,7 +26,8 @@ export default function LandingPage() {
   const [landingSettings, setLandingSettings] = useState<LandingSettings>({
     backgroundImage: null,
     title: "МОНГОЛЫН ЭМ ХАНГАМЖИЙН ШИНЭЧЛЭЛ ХОЛБОО",
-    subtitle: "НИЙТИЙН ҮЙЛЧИЛЛГЭЭТЭЙ ЭМИЙН САНГУУДЫН НЭГДСЭН ГИШҮҮДДЭЭ ҮЙЛЧИЛДЭГ ТӨРИЙН БУС БАЙГУУЛЛАГА",
+    subtitle:
+      "НИЙТИЙН ҮЙЛЧИЛЛГЭЭТЭЙ ЭМИЙН САНГУУДЫН НЭГДСЭН ГИШҮҮДДЭЭ ҮЙЛЧИЛДЭГ ТӨРИЙН БУС БАЙГУУЛЛАГА",
   });
   const { user, isAuthenticated, logout, register } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -123,14 +129,14 @@ export default function LandingPage() {
         ) : (
           <>
             <Button
-              onClick={() => router.push('/login')}
+              onClick={() => router.push("/login")}
               variant="ghost"
               className="text-white !text-white hover:!text-white/80 hover:bg-transparent underline"
             >
               Нэвтрэх
             </Button>
             <Button
-              onClick={() => router.push('/register')}
+              onClick={() => router.push("/register")}
               variant="ghost"
               className="text-white !text-white hover:!text-white/80 hover:bg-transparent underline"
             >
@@ -188,7 +194,7 @@ export default function LandingPage() {
         className={`min-h-screen flex flex-col items-center px-4 relative z-10 text-white`}
       >
         {/* Logo and Title */}
-        <div className="text-center mb-6">
+        <div className="text-center mb-6 mt-40">
           <div className="w-32 h-32 mx-auto mb-6 relative">
             <Image
               src="/branding/mrp.png"
@@ -205,7 +211,7 @@ export default function LandingPage() {
         {/* Service Cards */}
         <div className="grid grid-cols-5 gap-6 mx-auto w-full max-w-6xl mt-4">
           <Card
-            onClick={() => router.push('/main')}
+            onClick={() => router.push("/main")}
             className="group cursor-pointer w-full h-full bg-white/5 backdrop-blur-sm rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300 transform hover:-translate-y-1 border border-white/10 hover:border-white/20 text-white hover:text-white shadow-lg hover:shadow-xl"
           >
             <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white/20 transition-colors duration-300">
@@ -228,7 +234,7 @@ export default function LandingPage() {
           </Card>
 
           <Card
-            onClick={() => router.push('/schedule')}
+            onClick={() => router.push("/schedule")}
             className="group cursor-pointer w-full h-full bg-white/5 backdrop-blur-sm rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300 transform hover:-translate-y-1 border border-white/10 hover:border-white/20 text-white hover:text-white shadow-lg hover:shadow-xl"
           >
             <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white/20 transition-colors duration-300">
@@ -247,11 +253,13 @@ export default function LandingPage() {
                 />
               </svg>
             </div>
-            <h3 className="text-lg font-semibold text-white">ХУГАЦААТ ТӨЛӨВЛӨГӨӨ</h3>
+            <h3 className="text-lg font-semibold text-white">
+              ХУГАЦААТ ТӨЛӨВЛӨГӨӨ
+            </h3>
           </Card>
 
           <Card
-            onClick={() => router.push('/news')}
+            onClick={() => router.push("/news")}
             className="group cursor-pointer w-full h-full bg-white/5 backdrop-blur-sm rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300 transform hover:-translate-y-1 border border-white/10 hover:border-white/20 text-white hover:text-white shadow-lg hover:shadow-xl"
           >
             <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white/20 transition-colors duration-300">
@@ -274,7 +282,7 @@ export default function LandingPage() {
           </Card>
 
           <Card
-            onClick={() => router.push('/contact')}
+            onClick={() => router.push("/contact")}
             className="group cursor-pointer w-full h-full bg-white/5 backdrop-blur-sm rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300 transform hover:-translate-y-1 border border-white/10 hover:border-white/20 text-white hover:text-white shadow-lg hover:shadow-xl"
           >
             <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white/20 transition-colors duration-300">
@@ -297,7 +305,7 @@ export default function LandingPage() {
           </Card>
 
           <Card
-            onClick={isAuthenticated ? logout : () => router.push('/login')}
+            onClick={isAuthenticated ? logout : () => router.push("/login")}
             className="group cursor-pointer w-full h-full bg-white/5 backdrop-blur-sm rounded-xl p-6 text-center hover:bg-white/10 transition-all duration-300 transform hover:-translate-y-1 border border-white/10 hover:border-white/20 text-white hover:text-white shadow-lg hover:shadow-xl"
           >
             <div className="w-16 h-16 mx-auto mb-4 bg-white/10 rounded-full flex items-center justify-center group-hover:bg-white/20 transition-colors duration-300">

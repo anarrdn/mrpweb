@@ -11,14 +11,13 @@ const Header = () => {
 
   return (
     <header
-      className="fixed top-0 left-0 right-0 z-50 shadow-md bg-[#00b1ad] text-white"
+      className="w-full shadow-md bg-[#00b1ad] text-white fixed top-0 left-0 right-0 z-50 h-[140px]"
       ref={parent}
     >
       <div className="container mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <TitleSection />
-          <div className="ml-auto">
-          </div>
+          <div className="ml-auto"></div>
         </div>
         <div className="flex items-center justify-center mt-6">
           <NewNavigation />

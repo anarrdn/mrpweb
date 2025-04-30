@@ -4,18 +4,18 @@ import { Breadcrumbs, Typography } from "@mui/material";
 import Link from "next/link";
 
 const healthLaws = [
-  { title: "Монгол улсын хууль", href: "#" },
-  { title: "Монгол улсын хууль", href: "#" },
-  { title: "Монгол улсын хууль", href: "#" },
-  { title: "Монгол улсын хууль", href: "#" },
-  { title: "Монгол улсын хууль", href: "#" },
-  { title: "Монгол улсын хууль", href: "#" },
-  { title: "Монгол улсын хууль", href: "#" },
-  { title: "Монгол улсын хууль", href: "#" },
-  { title: "Монгол улсын хууль", href: "#" },
-  { title: "Монгол улсын хууль", href: "#" },
-  { title: "Монгол улсын хууль", href: "#" },
-  { title: "Монгол улсын хууль", href: "#" },
+  { title: "Тогтоол", href: "#" },
+  { title: "Тогтоол", href: "#" },
+  { title: "Тогтоол", href: "#" },
+  { title: "Тогтоол", href: "#" },
+  { title: "Тогтоол", href: "#" },
+  { title: "Тогтоол", href: "#" },
+  { title: "Тогтоол", href: "#" },
+  { title: "Тогтоол", href: "#" },
+  { title: "Тогтоол", href: "#" },
+  { title: "Тогтоол", href: "#" },
+  { title: "Тогтоол", href: "#" },
+  { title: "Тогтоол", href: "#" },
 ];
 
 export default function HealthLawListPage() {
@@ -29,10 +29,10 @@ export default function HealthLawListPage() {
           <Link color="inherit" href="/law">
             Хууль эрх зүй
           </Link>
-          <Typography color="text.primary"> Монгол улсын хууль</Typography>
+          <Typography color="text.primary"> Засгийн газрын тогтоол</Typography>
         </Breadcrumbs>
         <h1 className="text-2xl font-bold mb-4 text-gray-800">
-          Монгол улсын хууль
+          Засгийн газрын тогтоол
         </h1>
         <div className="border border-gray-200 rounded-sm">
           {healthLaws.map((law, idx) => (

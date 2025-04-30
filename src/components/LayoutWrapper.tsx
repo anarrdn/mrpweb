@@ -15,13 +15,20 @@ export default function LayoutWrapper({
   const isLoginPage = pathname === "/login";
   const isRegisterPage = pathname === "/register";
 
-  const showHeader = !isLandingPage && !isAdminPage && !isLoginPage && !isRegisterPage;
+  const showHeader =
+    !isLandingPage && !isAdminPage && !isLoginPage && !isRegisterPage;
 
   return (
-    <>
-      {showHeader && <Header />}
-      {showHeader && <div className="h-24" />}
-      <main className={`flex-1 min-h-[calc(100vh-4rem)]${showHeader ? ' bg-gray-50' : ''}`}>{children}</main>
-    </>
+    <div className="relative min-h-screen">
+      {showHeader && (
+        <>
+          <Header />
+          <div className="h-[140px] w-full" />
+        </>
+      )}
+      <main className={`${showHeader ? "pt-0 bg-gray-50" : ""}`}>
+        {children}
+      </main>
+    </div>
   );
 }

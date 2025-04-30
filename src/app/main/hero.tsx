@@ -23,7 +23,7 @@ export default function Hero({ content }: HeroProps) {
     : null;
 
   return (
-    <div className="relative h-screen w-full">
+    <div className="relative h-screen w-full -mt-20">
       {imageUrl && (
         <Image
           src={imageUrl}
