@@ -21,19 +21,17 @@ const healthLaws = [
 export default function HealthLawListPage() {
   return (
     <section className="w-full flex justify-center bg-gray-50 mb-40 mt-10">
-      <div className="w-full max-w-3xl bg-white rounded-sm shadow-sm ">
-        <Breadcrumbs aria-label="breadcrumb">
-          <Link color="inherit" href="/">
+      <div className="w-full max-w-3xl">
+        <Breadcrumbs aria-label="breadcrumb" className="text-sm">
+          <Link color="inherit" href="/" className="text-sm">
             Нүүр
           </Link>
-          <Link color="inherit" href="/law">
+          <Link color="inherit" href="/law" className="text-sm">
             Хууль эрх зүй
           </Link>
           <Typography color="text.primary"> УИХ-ын тогтоол</Typography>
         </Breadcrumbs>
-        <h1 className="text-2xl font-bold mb-4 text-gray-800">
-          УИХ-ын тогтоол
-        </h1>
+        <h1 className="text-xl font-bold mb-4 text-gray-800">УИХ-ын тогтоол</h1>
         <div className="border border-gray-200 rounded-sm">
           {healthLaws.map((law, idx) => (
             <Link

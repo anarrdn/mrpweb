@@ -107,14 +107,14 @@ export default function ReportFormDetailPage() {
       <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl px-6 py-12 mt-10 mb-16">
         {/* Breadcrumbs */}
         <div className="mb-8">
-          <Breadcrumbs aria-label="breadcrumb">
-            <Link color="inherit" href="/">
+          <Breadcrumbs aria-label="breadcrumb" className="text-sm">
+            <Link color="inherit" href="/" className="text-sm">
               Нүүр
             </Link>
-            <Link color="inherit" href="/news">
+            <Link color="inherit" href="/news" className="text-sm">
               Мэдээ мэдээлэл
             </Link>
-            <Link color="inherit" href="/news/report-forms">
+            <Link color="inherit" href="/news/report-forms" className="text-sm">
               Тайлангийн маягтууд
             </Link>
             <Typography color="text.primary">{form.title}</Typography>

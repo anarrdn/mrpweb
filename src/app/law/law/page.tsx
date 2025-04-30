@@ -22,11 +22,11 @@ export default function HealthLawListPage() {
   return (
     <section className="w-full flex justify-center bg-gray-50 mb-40 mt-10">
       <div className="w-full max-w-3xl bg-white rounded-sm shadow-sm ">
-        <Breadcrumbs aria-label="breadcrumb">
-          <Link color="inherit" href="/">
+        <Breadcrumbs aria-label="breadcrumb" className="text-sm">
+          <Link color="inherit" href="/" className="text-sm">
             Нүүр
           </Link>
-          <Link color="inherit" href="/law">
+          <Link color="inherit" href="/law" className="text-sm">
             Хууль эрх зүй
           </Link>
           <Typography color="text.primary"> Монгол улсын хууль</Typography>

@@ -72,14 +72,14 @@ const reportForms = [
 export default function ReportFormsPage() {
   return (
     <section className="w-full flex justify-center bg-gray-50 min-h-screen">
-      <div className="w-full max-w-4xl bg-white rounded-2xl shadow-xl px-6 py-12 mt-10 mb-16">
+      <div className="w-full max-w-6xl px-6 py-12 mt-10 mb-16">
         {/* Breadcrumbs */}
         <div className="mb-8">
-          <Breadcrumbs aria-label="breadcrumb">
-            <Link color="inherit" href="/">
+          <Breadcrumbs aria-label="breadcrumb" className="text-sm">
+            <Link color="inherit" href="/" className="text-sm">
               Нүүр
             </Link>
-            <Link color="inherit" href="/news">
+            <Link color="inherit" href="/news" className="text-sm">
               Мэдээ мэдээлэл
             </Link>
             <Typography color="text.primary">Тайлангийн маягтууд</Typography>
@@ -111,7 +111,7 @@ export default function ReportFormsPage() {
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-4">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+                    <span className="px-3 py-1 bg-[#00b1ad] text-white rounded-full text-sm font-semibold">
                       {form.category}
                     </span>
                     <span className="text-gray-500">
@@ -131,7 +131,7 @@ export default function ReportFormsPage() {
                   </div>
                   <Link
                     href={`/news/report-forms/${form.id}`}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center px-4 py-2 bg-[#00b1ad] text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <svg
                       className="w-5 h-5 mr-2"

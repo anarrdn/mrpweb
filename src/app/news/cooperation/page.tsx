@@ -12,60 +12,39 @@ const Typography = dynamic(() => import("@mui/material/Typography"), {
   ssr: false,
 });
 
-const inspectionNews = [
+const cooperationNews = [
   {
     id: "1",
-    title: "Эмийн сангийн хяналт шалгалтын үр дүн",
+    title: "Олон улсын хамтын ажиллагааны гэрээ",
     description:
-      "2024 оны эхний улирлын эмийн сангийн хяналт шалгалтын үр дүн гарлаа.",
+      "Эрүүл мэндийн салбарт олон улсын хамтын ажиллагааны гэрээ байгууллаа.",
     date: "2024-03-15",
     image: "/branding/consultation.jpg",
-    category: "Хяналт шалгалт",
+    category: "Хамтын ажиллагаа",
+    type: "youtube",
   },
   {
     id: "2",
-    title: "Эмнэлгийн тусламж үйлчилгээний чанарын хяналт",
-    description:
-      "Эмнэлгийн тусламж үйлчилгээний чанарын хяналтын үр дүн гарлаа.",
+    title: "Хамтын ажиллагааны төсөл",
+    description: "Эрүүл мэндийн салбарт хамтын ажиллагааны шинэ төсөл эхэллээ.",
     date: "2024-03-10",
     image: "/branding/consultation.jpg",
-    category: "Хяналт шалгалт",
+    category: "Хамтын ажиллагаа",
+    type: "website",
   },
   {
     id: "3",
-    title: "Эрүүл мэндийн байгууллагын хяналт шалгалт",
-    description: "Эрүүл мэндийн байгууллагын хяналт шалгалтын үр дүн гарлаа.",
+    title: "Хамтын ажиллагааны тайлан",
+    description:
+      "Эрүүл мэндийн салбарт хамтын ажиллагааны сүүлийн үеийн тайлан.",
     date: "2024-03-05",
     image: "/branding/consultation.jpg",
-    category: "Хяналт шалгалт",
-  },
-  {
-    id: "4",
-    title: "Эмийн сангийн үйл ажиллагааны хяналт",
-    description: "Эмийн сангийн үйл ажиллагааны хяналтын үр дүн гарлаа.",
-    date: "2024-02-28",
-    image: "/branding/consultation.jpg",
-    category: "Хяналт шалгалт",
-  },
-  {
-    id: "5",
-    title: "Эмнэлгийн тусламж үйлчилгээний хяналт",
-    description: "Эмнэлгийн тусламж үйлчилгээний хяналтын үр дүн гарлаа.",
-    date: "2024-02-20",
-    image: "/branding/consultation.jpg",
-    category: "Хяналт шалгалт",
-  },
-  {
-    id: "6",
-    title: "Эрүүл мэндийн байгууллагын хяналт шалгалт",
-    description: "Эрүүл мэндийн байгууллагын хяналт шалгалтын үр дүн гарлаа.",
-    date: "2024-02-15",
-    image: "/branding/consultation.jpg",
-    category: "Хяналт шалгалт",
+    category: "Хамтын ажиллагаа",
+    type: "pdf",
   },
 ];
 
-export default function InspectionNewsPage() {
+export default function CooperationNewsPage() {
   return (
     <section className="w-full flex justify-center bg-gray-50 min-h-screen">
       <div className="w-full max-w-6xl px-6 py-12 mb-16">
@@ -79,19 +58,19 @@ export default function InspectionNewsPage() {
               Мэдээ мэдээлэл
             </Link>
             <Typography color="text.primary" className="text-sm">
-              Хяналт шалгалтын мэдээлэл
+              Хамтын ажиллагааны мэдээ
             </Typography>
           </Breadcrumbs>
         </div>
         <h1 className="text-2xl font-bold mb-4 text-center text-gray-900">
-          Хяналт шалгалтын мэдээлэл
+          Хамтын ажиллагааны мэдээ
         </h1>
         <p className="text-base text-gray-600 mb-10 text-center">
-          Эрүүл мэндийн салбарын хяналт шалгалтын мэдээлэл:
+          Эрүүл мэндийн салбарт хамтын ажиллагааны мэдээ, танилцуулга:
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {inspectionNews.map((news) => (
-            <Link href={`/news/inspection/${news.id}`} key={news.id}>
+          {cooperationNews.map((news) => (
+            <Link href={`/news/cooperation/${news.id}`} key={news.id}>
               <Card className="h-full overflow-hidden rounded-xl hover:shadow-2xl transition-shadow group">
                 <div className="relative h-48 w-full">
                   <Image
@@ -103,14 +82,14 @@ export default function InspectionNewsPage() {
                 </div>
                 <div className="p-6">
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="text-sm text-blue-600 font-semibold">
+                    <span className="text-sm text-[#00b1ad] font-semibold">
                       {news.category}
                     </span>
                     <span className="text-sm text-gray-500">
                       {new Date(news.date).toLocaleDateString("mn-MN")}
                     </span>
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
+                  <h2 className="text-xl font-semibold text-gray-900 mb-2 group-hover:text-[#00b1ad] transition-colors">
                     {news.title}
                   </h2>
                   <p className="text-gray-600 line-clamp-2">

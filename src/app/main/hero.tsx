@@ -36,7 +36,7 @@ export default function Hero({ content }: HeroProps) {
       )}
       <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
         <div className="text-center text-white w-full px-4">
-          <h1 className="text-4xl md:text-5xl font-bold whitespace-nowrap mx-auto">
+          <h1 className="text-4xl md:text-5xl font-bold whitespace-nowrap -mt-20">
             {content?.title || "МОНГОЛЫН ЭМ ХАНГАМЖИЙН ШИНЭЧЛЭЛ ХОЛБОО"}
           </h1>
         </div>
